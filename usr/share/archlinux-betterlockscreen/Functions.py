@@ -2,8 +2,6 @@
 # =                  Author: Brad Heffernan                       =
 # =================================================================
 import os
-import subprocess
-import threading
 import psutil
 import gi
 from os.path import expanduser
@@ -66,11 +64,11 @@ def show_in_app_notification(self, message):
 
 def timeOut(self):
     close_in_app_notification(self)
+    return False
 
 
 def close_in_app_notification(self):
     self.notification_revealer.set_reveal_child(False)
-    GLib.source_remove(self.timeout_id)
     self.timeout_id = None
 
 

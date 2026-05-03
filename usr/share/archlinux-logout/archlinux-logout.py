@@ -246,14 +246,15 @@ class TransparentWindow(Gtk.ApplicationWindow):
 
         # Save button visibility selection
         _all_buttons = ["cancel", "shutdown", "restart", "suspend", "hibernate", "lock", "logout"]
-        selected = [b for b in _all_buttons if getattr(self, f"chk_btn_{b}", None) and getattr(self, f"chk_btn_{b}").get_active()]
+        selected = [b for b in _all_buttons
+                    if getattr(self, f"chk_btn_{b}", None) and getattr(self, f"chk_btn_{b}").get_active()]
         new_buttons_line = "buttons=" + ",".join(selected) + "\n"
         for idx, line in enumerate(lines):
             if line.strip().startswith("buttons="):
                 lines[idx] = new_buttons_line
                 break
 
-    def on_save_clicked(self, widget):
+    def on_save_clicked(self, _widget):
         try:
             with open(
                 fn.home + "/.config/archlinux-logout/archlinux-logout.conf", "r"
@@ -296,6 +297,7 @@ class TransparentWindow(Gtk.ApplicationWindow):
 
     def _start_hover_timer(self, lbl):
         self._cancel_hover_timer()
+
         def show_label():
             lbl.set_visible(True)
             self._hover_timer_id = None
@@ -624,9 +626,10 @@ class TransparentWindow(Gtk.ApplicationWindow):
             self.get_application().quit()
 
     def __exec_cmd(self, cmdline):
-        fn.os.system(cmdline)
+        t = threading.Thread(target=lambda: fn.subprocess.Popen(cmdline, shell=True), daemon=True)
+        t.start()
 
-    def on_close(self, widget):
+    def on_close(self, _widget):
         self._cleanup_runtime_files()
         self.get_application().quit()
         return False

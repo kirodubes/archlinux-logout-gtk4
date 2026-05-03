@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.05.03
+
+**What Changed**
+Added a session-agnostic `pkill` fallback to `_get_logout()` so unrecognised desktop environments/WMs no longer silently fail to logout.
+
+**Technical Details**
+After all named session branches, if `desktop` is a non-empty, non-`"unknown"` string, the fallback extracts the bare name (stripping any `/usr/share/xsessions/` or `/usr/share/wayland-sessions/` prefix) and returns `"pkill <name>"`. Falls through to `None` only if detection returned `"unknown"`.
+
+**Files Modified**
+- `usr/share/archlinux-logout/Functions.py`
+
+---
+
 ## 2026.04.16
 
 **What Changed**

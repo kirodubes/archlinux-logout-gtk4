@@ -4,7 +4,7 @@ from Functions import os
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('GdkPixbuf', '2.0')
-from gi.repository import Gtk, GdkPixbuf  # noqa
+from gi.repository import Gtk, GdkPixbuf, Gdk  # noqa
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -46,8 +46,8 @@ class Support(Gtk.Window):
         # --- Patreon button ---
         pbp = GdkPixbuf.Pixbuf().new_from_file_at_size(
             os.path.join(base_dir, 'images/patreon.png'), 48, 48)
-        pimage = Gtk.Image()
-        pimage.set_from_pixbuf(pbp)
+        pimage = Gtk.Picture()
+        pimage.set_paintable(Gdk.Texture.new_for_pixbuf(pbp))
 
         patreon_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         patreon_click = Gtk.GestureClick()
@@ -62,8 +62,8 @@ class Support(Gtk.Window):
         # --- PayPal button ---
         pbpp = GdkPixbuf.Pixbuf().new_from_file_at_size(
             os.path.join(base_dir, 'images/paypal.png'), 54, 54)
-        ppimage = Gtk.Image()
-        ppimage.set_from_pixbuf(pbpp)
+        ppimage = Gtk.Picture()
+        ppimage.set_paintable(Gdk.Texture.new_for_pixbuf(pbpp))
 
         paypal_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         paypal_click = Gtk.GestureClick()
@@ -78,8 +78,8 @@ class Support(Gtk.Window):
         # --- Logo ---
         logo = GdkPixbuf.Pixbuf().new_from_file_at_size(
             os.path.join(base_dir, 'images/archlinux.png'), 100, 100)
-        logo_image = Gtk.Image()
-        logo_image.set_from_pixbuf(logo)
+        logo_image = Gtk.Picture()
+        logo_image.set_paintable(Gdk.Texture.new_for_pixbuf(logo))
 
         pE_label = Gtk.Label(label="Patreon")
 

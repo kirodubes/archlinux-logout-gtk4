@@ -3,7 +3,7 @@ from Functions import os
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('GdkPixbuf', '2.0')
-from gi.repository import Gtk, GdkPixbuf  # noqa
+from gi.repository import Gtk, GdkPixbuf, Gdk  # noqa
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -18,11 +18,11 @@ class splashScreen(Gtk.Window):
         main_vbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=1)
         self.set_child(main_vbox)
 
-        self.image = Gtk.Image()
+        self.image = Gtk.Picture()
         pimage = GdkPixbuf.Pixbuf().new_from_file_at_size(
             base_dir + "/images/splash.png", 600, 400
         )
-        self.image.set_from_pixbuf(pimage)
+        self.image.set_paintable(Gdk.Texture.new_for_pixbuf(pimage))
 
         main_vbox.append(self.image)
 

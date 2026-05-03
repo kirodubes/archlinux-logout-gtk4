@@ -2,7 +2,7 @@
 # =                  Author: Brad Heffernan                       =
 # =================================================================
 
-from Functions import base_dir, os
+from Functions import base_dir
 
 
 def GUI(self, Gtk, GdkPixbuf, Gdk, th, fn):
@@ -31,8 +31,8 @@ def GUI(self, Gtk, GdkPixbuf, Gdk, th, fn):
     self.notification_label = Gtk.Label()
 
     pb_panel = GdkPixbuf.Pixbuf().new_from_file(base_dir + '/images/panel.png')
-    panel = Gtk.Image()
-    panel.set_from_pixbuf(pb_panel)
+    panel = Gtk.Picture()
+    panel.set_paintable(Gdk.Texture.new_for_pixbuf(pb_panel))
 
     overlayFrame = Gtk.Overlay()
     overlayFrame.set_child(panel)
@@ -52,8 +52,8 @@ def GUI(self, Gtk, GdkPixbuf, Gdk, th, fn):
     btnsearch = Gtk.Button(label="Load")
     btndefault = Gtk.Button(label="Default")
 
-    btnsearch.connect("clicked", self.on_load_clicked, self.fb)
-    btndefault.connect("clicked", self.on_default_clicked, self.fb)
+    btnsearch.connect("clicked", self.on_load_clicked)
+    btndefault.connect("clicked", self.on_default_clicked)
     btnbrowse.connect("clicked", self.on_browse_clicked)
 
     btnsearch.set_size_request(130, 0)

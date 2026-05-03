@@ -66,17 +66,17 @@ class Main(Gtk.ApplicationWindow):
         t.start()
         return False
 
-    def on_default_clicked(self, widget, fb):
+    def on_default_clicked(self, _widget):
         self._clear_flowbox()
         t = th.Thread(target=self.create_flowbox, args=(self.loc.get_text(), True))
         t.daemon = True
         t.start()
 
-    def on_support_clicked(self, widget):
+    def on_support_clicked(self, _widget):
         sup = Support.Support(self)
         sup.present()
 
-    def on_apply_clicked(self, widget):
+    def on_apply_clicked(self, _widget):
         if self.image_path is None:
             fn.show_in_app_notification(self, "You need to select an image first")
         else:
@@ -90,7 +90,7 @@ class Main(Gtk.ApplicationWindow):
         command = ["betterlockscreen", "-u", self.image_path,
                    "--blur", str(int(self.blur.get_value()) / 100)]
         try:
-            fn.subprocess.call(command, shell=False)
+            fn.subprocess.Popen(command, shell=False).wait()
             fn.show_in_app_notification(self, "Lockscreen set successfully")
             GLib.idle_add(self.btnset.set_sensitive, True)
             GLib.idle_add(self.status.set_text, "")
@@ -98,18 +98,18 @@ class Main(Gtk.ApplicationWindow):
             GLib.idle_add(self.status.set_text, "ERROR: is betterlockscreen installed?")
             GLib.idle_add(self.btnset.set_sensitive, True)
 
-    def on_item_clicked(self, flowbox, child):
+    def on_item_clicked(self, _flowbox, child):
         image = child.get_child()
         if image:
             self.image_path = image.get_name()
 
-    def on_load_clicked(self, widget, fb):
+    def on_load_clicked(self, _widget):
         self._clear_flowbox()
         t = th.Thread(target=self.create_flowbox, args=(self.loc.get_text(), False))
         t.daemon = True
         t.start()
 
-    def on_search_clicked(self, widget):
+    def on_search_clicked(self, _widget):
         self._clear_flowbox()
         t = th.Thread(target=self.create_flowbox, args=(self.loc.get_text(), False))
         t.daemon = True
@@ -122,7 +122,7 @@ class Main(Gtk.ApplicationWindow):
                 break
             self.fb.remove(child)
 
-    def on_browse_clicked(self, widget):
+    def on_browse_clicked(self, _widget):
         dialog = Gtk.FileDialog(title="Please choose a folder")
         dialog.set_initial_folder(Gio.File.new_for_path(fn.home))
         dialog.select_folder(self, None, self._on_browse_response)
