@@ -288,7 +288,8 @@ def _get_logout():
     # wayland desktops
     elif desktop in ("sway", "/usr/share/wayland-sessions/sway"):
         return "pkill sway"
-    elif desktop in ("hyprland", "hyprland-uwsm", "/usr/share/wayland-sessions/hyprland", "/usr/share/wayland-sessions/hyprland-uwsm"):
+    elif desktop in ("hyprland", "hyprland-uwsm",
+                     "/usr/share/wayland-sessions/hyprland", "/usr/share/wayland-sessions/hyprland-uwsm"):
         return "hyprctl dispatch exit"
     elif desktop in ("river", "/usr/share/wayland-sessions/river"):
         return "pkill river"
@@ -300,6 +301,9 @@ def _get_logout():
         return "pkill niri"
     elif desktop in ("oxwm", "/usr/share/wayland-sessions/oxwm"):
         return "pkill oxwm"
+    if desktop and desktop != "unknown":
+        name = desktop.rstrip("/").split("/")[-1]
+        return "pkill " + name
     return None
 
 
