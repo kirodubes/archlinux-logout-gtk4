@@ -58,3 +58,26 @@ On X11, the active monitor is determined via `xdotool getmouselocation` (mouse p
 ### Artix Linux
 
 The main window detects Artix at startup and substitutes `openrc`-compatible power commands in place of `systemctl` equivalents.
+
+## Current State (2026.05.03)
+
+Both apps are clean against project coding rules and GTK4 API correctness:
+
+- All `subprocess.call()` and `os.system()` GUI-callback violations fixed
+- All unused callback params named `_widget` / `_flowbox`
+- All `Gtk.Image.set_from_pixbuf()` (GTK3 deprecated) replaced with `Gtk.Picture` + `Gdk.Texture.new_for_pixbuf()`
+- GTK4 signal handler signatures verified correct throughout
+- `_get_logout()` has a session-agnostic `pkill <name>` fallback for unrecognised WMs
+- `Gtk.AlertDialog` (GTK 4.10+) is safe — Arch ships GTK 4.16+
+
+## Maybe Todos (performance)
+
+- **Parallelize SVG loading** — replace single background thread in `_load_pixbufs_async` with `ThreadPoolExecutor(max_workers=4)`. Icons fill in ~4x faster; small change, high impact on perceived load time vs GTK3 variant.
+- **Pre-cache hover textures** — extend `_load_pixbufs_async` to also load all `*_blur.svg` variants and store as `self._textures[key]`. Then `on_mouse_in`/`on_mouse_out` swap paintables instead of re-decoding SVG from disk on every hover event.
+- **Move `xdotool` call after `present()`** — currently `display_on_monitor()` blocks window from appearing while xdotool runs (50–150ms on X11). Restructure so window presents first, then resolves monitor.
+- **Remove `from distro import id` at class body level** — runs at import time before `__init__`; move into `__init__` to defer the file I/O.
+
+## Known Non-Issues
+
+- Markdown linter (MD036/MD032) warns on CHANGELOG.md — pre-existing format, intentional
+- `dbus-launch` warning at startup when run outside a full desktop session — env issue, not a code bug; solvable via launcher script wrapping with `dbus-run-session` if needed

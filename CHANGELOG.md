@@ -3,13 +3,29 @@
 ## 2026.05.03
 
 **What Changed**
-Added a session-agnostic `pkill` fallback to `_get_logout()` so unrecognised desktop environments/WMs no longer silently fail to logout.
+Full code quality and GTK4 correctness pass across both apps. Added session-agnostic pkill fallback, fixed GTK3 deprecated API usage, corrected signal handler signatures, fixed GLib timeout double-remove bug, and enforced project coding rules throughout.
 
 **Technical Details**
-After all named session branches, if `desktop` is a non-empty, non-`"unknown"` string, the fallback extracts the bare name (stripping any `/usr/share/xsessions/` or `/usr/share/wayland-sessions/` prefix) and returns `"pkill <name>"`. Falls through to `None` only if detection returned `"unknown"`.
+- `_get_logout()` pkill fallback: if no named DE matches, extracts bare name from `DESKTOP_SESSION`/`XDG_CURRENT_DESKTOP` and returns `"pkill <name>"` — makes logout work on any unrecognised WM
+- `__exec_cmd` now spawns `subprocess.Popen` in a daemon thread instead of blocking `os.system()` call
+- `subprocess.call()` in `archlinux-betterlockscreen.py::set_lockscreen` replaced with `Popen().wait()`
+- All `Gtk.Image` + `set_from_pixbuf()` (GTK3 deprecated) replaced with `Gtk.Picture` + `set_paintable(Gdk.Texture.new_for_pixbuf())` across betterlockscreen GUI.py, Support.py, Splash.py
+- `btnsearch`/`btndefault` `.connect("clicked", handler, self.fb)` fixed — GTK4 `clicked` only emits the widget; extra `self.fb` arg was silently dropped at runtime causing `fb` param to always be `None`
+- Dead `fb` parameter removed from `on_load_clicked` and `on_default_clicked`
+- `timeOut()` now returns `False` to signal one-shot; `close_in_app_notification()` no longer calls `GLib.source_remove()` (double-remove caused GLib warning)
+- Unused `subprocess`, `threading` imports removed from betterlockscreen `Functions.py`
+- Unused `os` import removed from betterlockscreen `GUI.py`
+- All unused callback `widget` params renamed to `_widget` across both apps per GTK4 convention
+- `Gtk.AlertDialog` (GTK 4.10+) confirmed safe — Arch Linux ships GTK 4.16+, no version guard needed
 
 **Files Modified**
 - `usr/share/archlinux-logout/Functions.py`
+- `usr/share/archlinux-logout/archlinux-logout.py`
+- `usr/share/archlinux-betterlockscreen/archlinux-betterlockscreen.py`
+- `usr/share/archlinux-betterlockscreen/GUI.py`
+- `usr/share/archlinux-betterlockscreen/Support.py`
+- `usr/share/archlinux-betterlockscreen/Splash.py`
+- `usr/share/archlinux-betterlockscreen/Functions.py`
 
 ---
 
