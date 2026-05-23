@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="kiro.jpg" alt="Kiro" width="220" />
+</p>
+
 # ArchLinux Logout GTK4
 
 A modern, customizable logout/power management widget for ArchLinux and other Linux distributions. Built with GTK4, this application provides a transparent, fullscreen overlay for quick access to power management features with an elegant, theme-aware interface.
