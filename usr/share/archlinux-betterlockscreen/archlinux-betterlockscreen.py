@@ -8,6 +8,7 @@ import gi
 import Functions as fn
 import GUI
 import Support
+import subprocess
 import threading as th
 import webbrowser
 import sys
@@ -90,7 +91,7 @@ class Main(Gtk.ApplicationWindow):
         command = ["betterlockscreen", "-u", self.image_path,
                    "--blur", str(int(self.blur.get_value()) / 100)]
         try:
-            fn.subprocess.Popen(command, shell=False).wait()
+            subprocess.Popen(command, shell=False).wait()
             fn.show_in_app_notification(self, "Lockscreen set successfully")
             GLib.idle_add(self.btnset.set_sensitive, True)
             GLib.idle_add(self.status.set_text, "")
