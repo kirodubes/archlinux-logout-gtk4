@@ -2,9 +2,6 @@
 # =                  Author: Brad Heffernan                       =
 # =================================================================
 
-from Functions import base_dir
-
-
 def GUI(self, Gtk, GdkPixbuf, Gdk, th, fn):
 
     self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
@@ -29,16 +26,22 @@ def GUI(self, Gtk, GdkPixbuf, Gdk, th, fn):
     self.notification_revealer.set_reveal_child(False)
 
     self.notification_label = Gtk.Label()
+    self.notification_label.set_hexpand(True)
 
-    pb_panel = GdkPixbuf.Pixbuf().new_from_file(base_dir + '/images/panel.png')
-    panel = Gtk.Picture()
-    panel.set_paintable(Gdk.Texture.new_for_pixbuf(pb_panel))
+    notification_bg = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+    notification_bg.set_size_request(-1, 30)
+    notification_bg.add_css_class("notification-bar")
+    notification_bg.append(self.notification_label)
 
-    overlayFrame = Gtk.Overlay()
-    overlayFrame.set_child(panel)
-    overlayFrame.add_overlay(self.notification_label)
+    css_notif = Gtk.CssProvider()
+    css_notif.load_from_data(b".notification-bar { background-color: #1a1a1a; }")
+    Gtk.StyleContext.add_provider_for_display(
+        Gdk.Display.get_default(),
+        css_notif,
+        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+    )
 
-    self.notification_revealer.set_child(overlayFrame)
+    self.notification_revealer.set_child(notification_bg)
 
     hbox1.append(self.notification_revealer)
     self.notification_revealer.set_hexpand(True)

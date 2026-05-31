@@ -6,6 +6,7 @@
 - Added a standalone **settings mode** so ArchLinux Logout can be configured from the XFCE Settings Manager without launching the fullscreen power overlay. New `archlinux-logout --settings` opens just the configuration panel in a small decorated window; ships a new `.desktop` entry ("ArchLinux Logout Settings") with XFCE Settings categories.
 - Added an **Exit** button to the standalone settings window (not shown in the overlay popover, which already has Cancel).
 - Fixed a latent infinite-recursion bug in the save path (`_after_save` calling itself) that a global replace had introduced — would have broken Save in the overlay popover too.
+- **archlinux-betterlockscreen**: replaced the `panel.png` image-as-background behind the in-app notification ("Lockscreen set successfully") with a CSS-styled bar, matching the fix already shipped in ArchLinux Tweak Tool. The notification no longer renders a stretched bitmap behind the text.
 
 ### Technical Details
 - `GUI.py`: extracted the settings widget tree out of the overlay popover into a shared `SettingsPanel(self, Gtk, fn)` builder, used by both the popover (overlay mode) and the new settings window.
@@ -19,6 +20,7 @@
 - usr/share/archlinux-logout/archlinux-logout.py
 - usr/bin/archlinux-logout
 - usr/share/applications/archlinux-logout-settings.desktop (created)
+- usr/share/archlinux-betterlockscreen/GUI.py
 - CHANGELOG.md
 
 ## 2026.05.21
