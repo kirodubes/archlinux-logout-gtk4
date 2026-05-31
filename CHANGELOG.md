@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026.05.31
+
+### What Changed
+- Added a standalone **settings mode** so ArchLinux Logout can be configured from the XFCE Settings Manager without launching the fullscreen power overlay. New `archlinux-logout --settings` opens just the configuration panel in a small decorated window; ships a new `.desktop` entry ("ArchLinux Logout Settings") with XFCE Settings categories.
+- Added an **Exit** button to the standalone settings window (not shown in the overlay popover, which already has Cancel).
+- Fixed a latent infinite-recursion bug in the save path (`_after_save` calling itself) that a global replace had introduced — would have broken Save in the overlay popover too.
+
+### Technical Details
+- `GUI.py`: extracted the settings widget tree out of the overlay popover into a shared `SettingsPanel(self, Gtk, fn)` builder, used by both the popover (overlay mode) and the new settings window.
+- `archlinux-logout.py`: `TransparentWindow.__init__` takes `settings_only`; in that mode it builds a small decorated window via `_build_settings_window()` and returns early — skipping fullscreen, monitor detection, background CSS, and async pixbuf loading. The power keybinds are **not** wired in settings mode so pressing "S"/"R"/etc. can't trigger a real action.
+- The `--settings` branch sits at the `__main__` lock-file guard and bypasses the singleton entirely (never creates `/tmp/archlinux-logout.lock`), so it opens even while the overlay is up or after a stale-lock crash. Flag is parsed from `sys.argv` directly (not via GApplication) and the app runs with `app.run(None)`.
+- `on_save_clicked` now calls `_after_save()`, which pops down the popover in overlay mode or closes the window in settings mode.
+- Launcher `usr/bin/archlinux-logout` now forwards `"$@"`.
+
+### Files Modified
+- usr/share/archlinux-logout/GUI.py
+- usr/share/archlinux-logout/archlinux-logout.py
+- usr/bin/archlinux-logout
+- usr/share/applications/archlinux-logout-settings.desktop (created)
+- CHANGELOG.md
+
 ## 2026.05.21
 
 ### What Changed

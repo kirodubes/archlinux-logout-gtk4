@@ -65,17 +65,22 @@ class TransparentWindow(Gtk.ApplicationWindow):
     main_icon_size = 80
     aux_icon_size = 32
 
-    def __init__(self, app):
+    def __init__(self, app, settings_only=False):
         super().__init__(application=app, title="ArchLinux Logout")
+
+        self.settings_only = settings_only
 
         self.set_decorated(False)
 
         self.connect("close-request", self.on_close)
 
-        key_controller = Gtk.EventControllerKey()
-        key_controller.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
-        key_controller.connect("key-pressed", self.on_keypress)
-        self.add_controller(key_controller)
+        # In settings mode the power keybinds must NOT be wired — otherwise
+        # pressing "S"/"R"/etc. in the settings window would fire a real action.
+        if not settings_only:
+            key_controller = Gtk.EventControllerKey()
+            key_controller.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+            key_controller.connect("key-pressed", self.on_keypress)
+            self.add_controller(key_controller)
 
         self.connect("notify::fullscreened", self.on_window_state_changed)
         self.__is_fullscreen = False
@@ -102,12 +107,33 @@ class TransparentWindow(Gtk.ApplicationWindow):
         self.main_icon_size = self.icon
         self.aux_icon_size = 32
 
+        if settings_only:
+            self._build_settings_window()
+            return
+
         self._apply_background_css()
         self.display_on_monitor()
 
         # Show the dark background immediately, load icons on next idle cycle
         self.present()
         GLib.idle_add(self._build_gui)
+
+    def _build_settings_window(self):
+        self.set_title("ArchLinux Logout Settings")
+        self.set_decorated(True)
+        self.set_resizable(False)
+        self.set_default_size(420, 520)
+        self.set_child(GUI.SettingsPanel(self, Gtk, fn))
+        self.present()
+
+    def _after_save(self):
+        if getattr(self, "popover", None):
+            self.popover.popdown()
+        elif self.settings_only:
+            self.close()
+
+    def on_exit_clicked(self, _widget):
+        self.close()
 
     def _build_gui(self):
         self._pending_pixbufs = []
@@ -267,7 +293,7 @@ class TransparentWindow(Gtk.ApplicationWindow):
                 fn.home + "/.config/archlinux-logout/archlinux-logout.conf", "w"
             ) as f:
                 f.writelines(lines)
-            self.popover.popdown()
+            self._after_save()
         except Exception:
             fn.os.unlink(fn.home + "/.config/archlinux-logout/archlinux-logout.conf")
             if not fn.os.path.isfile(
@@ -288,7 +314,7 @@ class TransparentWindow(Gtk.ApplicationWindow):
                 fn.home + "/.config/archlinux-logout/archlinux-logout.conf", "w"
             ) as f:
                 f.writelines(lines)
-            self.popover.popdown()
+            self._after_save()
 
     def _cancel_hover_timer(self):
         if getattr(self, "_hover_timer_id", None):
@@ -640,11 +666,12 @@ class TransparentWindow(Gtk.ApplicationWindow):
 
 
 class ArchLinuxLogoutApp(Gtk.Application):
-    def __init__(self):
+    def __init__(self, settings_only=False):
         super().__init__(application_id="org.archlinux.logout", flags=Gio.ApplicationFlags.NON_UNIQUE)
+        self.settings_only = settings_only
 
     def do_activate(self):
-        TransparentWindow(self)
+        TransparentWindow(self, settings_only=self.settings_only)
 
 
 def signal_handler(sig, frame):
@@ -661,7 +688,13 @@ def signal_handler(sig, frame):
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
-    if not fn.os.path.isfile("/tmp/archlinux-logout.lock"):
+
+    # Settings mode opens only the configuration window — it must bypass the
+    # fullscreen-overlay lock-file singleton entirely (it never creates the lock).
+    if "--settings" in sys.argv:
+        app = ArchLinuxLogoutApp(settings_only=True)
+        app.run(None)
+    elif not fn.os.path.isfile("/tmp/archlinux-logout.lock"):
         try:
             with open("/tmp/archlinux-logout.pid", "w") as f:
                 f.write(str(fn.os.getpid()))

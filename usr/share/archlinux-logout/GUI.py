@@ -3,6 +3,162 @@
 # =====================================================
 
 
+def SettingsPanel(self, Gtk, fn):
+    """Build the settings widget tree, shared by the overlay popover and the standalone settings window."""
+    vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    vbox.set_margin_start(10)
+    vbox.set_margin_end(10)
+    vbox.set_margin_top(10)
+    vbox.set_margin_bottom(10)
+
+    lbl_opacity = Gtk.Label()
+    lbl_opacity.set_markup("<b>Opacity:</b>")
+    lbl_opacity.set_halign(Gtk.Align.START)
+    lbl_opacity.set_valign(Gtk.Align.END)
+
+    lbl_icon_size = Gtk.Label()
+    lbl_icon_size.set_markup("<b>Icon size:</b>")
+    lbl_icon_size.set_halign(Gtk.Align.START)
+    lbl_icon_size.set_valign(Gtk.Align.END)
+
+    lbl_theme = Gtk.Label()
+    lbl_theme.set_markup("<b>Theme:</b>")
+    lbl_theme.set_halign(Gtk.Align.START)
+    lbl_theme.set_valign(Gtk.Align.CENTER)
+
+    lbl_font_size = Gtk.Label()
+    lbl_font_size.set_markup("<b>Font size:</b>")
+    lbl_font_size.set_halign(Gtk.Align.START)
+    lbl_font_size.set_valign(Gtk.Align.END)
+
+    try:
+        vals = self.opacity * 100
+        ad1 = Gtk.Adjustment(value=vals, lower=0, upper=100, step_increment=5, page_increment=10, page_size=0)
+    except Exception:
+        ad1 = Gtk.Adjustment(value=60, lower=0, upper=100, step_increment=5, page_increment=10, page_size=0)
+
+    self.hscale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=ad1)
+    self.hscale.set_digits(0)
+    self.hscale.set_draw_value(True)
+    self.hscale.set_value_pos(Gtk.PositionType.TOP)
+    self.hscale.set_hexpand(True)
+    self.hscale.set_size_request(150, 0)
+    self.hscale.set_valign(Gtk.Align.START)
+
+    try:
+        vals = self.font
+        ad1f = Gtk.Adjustment(value=vals, lower=0, upper=80, step_increment=5, page_increment=10, page_size=0)
+    except Exception:
+        ad1f = Gtk.Adjustment(value=60, lower=0, upper=80, step_increment=5, page_increment=10, page_size=0)
+
+    self.fonts = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=ad1f)
+    self.fonts.set_digits(0)
+    self.fonts.set_draw_value(True)
+    self.fonts.set_value_pos(Gtk.PositionType.TOP)
+    self.fonts.set_hexpand(True)
+    self.fonts.set_size_request(150, 0)
+    self.fonts.set_valign(Gtk.Align.START)
+
+    try:
+        valsi = self.icon
+        ad1i = Gtk.Adjustment(value=valsi, lower=0, upper=300, step_increment=5, page_increment=10, page_size=0)
+    except Exception:
+        ad1i = Gtk.Adjustment(value=60, lower=0, upper=300, step_increment=5, page_increment=10, page_size=0)
+
+    self.icons = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=ad1i)
+    self.icons.set_digits(0)
+    self.icons.set_draw_value(True)
+    self.icons.set_value_pos(Gtk.PositionType.TOP)
+    self.icons.set_hexpand(True)
+    self.icons.set_size_request(150, 0)
+    self.icons.set_valign(Gtk.Align.START)
+
+    lists = fn._get_themes()
+    theme_model = Gtk.StringList.new(lists)
+    self.themes = Gtk.DropDown(model=theme_model)
+    active = lists.index(self.theme) if self.theme in lists else 0
+    self.themes.set_selected(active)
+
+    btn_save_settings = Gtk.Button(label="Save Settings")
+    btn_save_settings.connect("clicked", self.on_save_clicked)
+
+    hbox_opacity = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+    hbox_opacity.append(lbl_opacity)
+    hbox_opacity.append(self.hscale)
+
+    hbox_icon_size = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+    hbox_icon_size.append(lbl_icon_size)
+    hbox_icon_size.append(self.icons)
+
+    hbox_font_size = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+    hbox_font_size.append(lbl_font_size)
+    hbox_font_size.append(self.fonts)
+
+    lbl_show_text = Gtk.Label()
+    lbl_show_text.set_markup("<b>Show text:</b>")
+    lbl_show_text.set_halign(Gtk.Align.START)
+    lbl_show_text.set_valign(Gtk.Align.CENTER)
+
+    self.chk_show_text = Gtk.CheckButton()
+    self.chk_show_text.set_active(self.show_text)
+
+    hbox_show_text = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+    hbox_show_text.append(lbl_show_text)
+    hbox_show_text.append(self.chk_show_text)
+
+    # --- Button visibility checkboxes ---
+    lbl_buttons_section = Gtk.Label()
+    lbl_buttons_section.set_markup("<b>Buttons:</b>")
+    lbl_buttons_section.set_halign(Gtk.Align.START)
+    lbl_buttons_section.set_valign(Gtk.Align.CENTER)
+
+    _all_buttons = ["cancel", "shutdown", "restart", "suspend", "hibernate", "lock", "logout"]
+    _btn_display = {
+        "cancel": "Cancel", "shutdown": "Shutdown", "restart": "Restart",
+        "suspend": "Suspend", "hibernate": "Hibernate", "lock": "Lock", "logout": "Logout",
+    }
+
+    buttons_grid = Gtk.Grid()
+    buttons_grid.set_column_spacing(16)
+    buttons_grid.set_row_spacing(4)
+
+    for i, btn_name in enumerate(_all_buttons):
+        chk = Gtk.CheckButton(label=_btn_display[btn_name])
+        chk.set_active(btn_name in self.buttons)
+        setattr(self, f"chk_btn_{btn_name}", chk)
+        buttons_grid.attach(chk, i % 2, i // 2, 1, 1)
+
+    vbox_buttons_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+    vbox_buttons_section.append(lbl_buttons_section)
+    vbox_buttons_section.append(buttons_grid)
+
+    hbox_theme = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+    hbox_theme.append(lbl_theme)
+    hbox_theme.append(self.themes)
+
+    hbox_save = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+    hbox_save.append(btn_save_settings)
+
+    if getattr(self, "settings_only", False):
+        btn_exit = Gtk.Button(label="Exit")
+        btn_exit.connect("clicked", self.on_exit_clicked)
+        hbox_save.append(btn_exit)
+
+    grid_settings = Gtk.Grid()
+    grid_settings.set_row_spacing(20)
+
+    grid_settings.attach(hbox_opacity, 0, 1, 1, 1)
+    grid_settings.attach(hbox_icon_size, 0, 2, 1, 1)
+    grid_settings.attach(hbox_font_size, 0, 3, 1, 1)
+    grid_settings.attach(hbox_show_text, 0, 4, 1, 1)
+    grid_settings.attach(vbox_buttons_section, 0, 5, 1, 1)
+    grid_settings.attach(hbox_theme, 0, 6, 1, 1)
+    grid_settings.attach(hbox_save, 0, 7, 1, 1)
+
+    vbox.append(grid_settings)
+    return vbox
+
+
 def GUI(self, Gtk, GdkPixbuf, working_dir, os, Gdk, fn):
     def apply_icon_widget_size(container, image, size):
         container.set_halign(Gtk.Align.CENTER)
@@ -227,154 +383,7 @@ def GUI(self, Gtk, GdkPixbuf, working_dir, os, Gdk, fn):
     self.popover = Gtk.Popover()
     self.popover2 = Gtk.Popover()
 
-    vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    vbox.set_margin_start(10)
-    vbox.set_margin_end(10)
-    vbox.set_margin_top(10)
-    vbox.set_margin_bottom(10)
-
-    lbl_opacity = Gtk.Label()
-    lbl_opacity.set_markup("<b>Opacity:</b>")
-    lbl_opacity.set_halign(Gtk.Align.START)
-    lbl_opacity.set_valign(Gtk.Align.END)
-
-    lbl_icon_size = Gtk.Label()
-    lbl_icon_size.set_markup("<b>Icon size:</b>")
-    lbl_icon_size.set_halign(Gtk.Align.START)
-    lbl_icon_size.set_valign(Gtk.Align.END)
-
-    lbl_theme = Gtk.Label()
-    lbl_theme.set_markup("<b>Theme:</b>")
-    lbl_theme.set_halign(Gtk.Align.START)
-    lbl_theme.set_valign(Gtk.Align.CENTER)
-
-    lbl_font_size = Gtk.Label()
-    lbl_font_size.set_markup("<b>Font size:</b>")
-    lbl_font_size.set_halign(Gtk.Align.START)
-    lbl_font_size.set_valign(Gtk.Align.END)
-
-    try:
-        vals = self.opacity * 100
-        ad1 = Gtk.Adjustment(value=vals, lower=0, upper=100, step_increment=5, page_increment=10, page_size=0)
-    except Exception:
-        ad1 = Gtk.Adjustment(value=60, lower=0, upper=100, step_increment=5, page_increment=10, page_size=0)
-
-    self.hscale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=ad1)
-    self.hscale.set_digits(0)
-    self.hscale.set_draw_value(True)
-    self.hscale.set_value_pos(Gtk.PositionType.TOP)
-    self.hscale.set_hexpand(True)
-    self.hscale.set_size_request(150, 0)
-    self.hscale.set_valign(Gtk.Align.START)
-
-    try:
-        vals = self.font
-        ad1f = Gtk.Adjustment(value=vals, lower=0, upper=80, step_increment=5, page_increment=10, page_size=0)
-    except Exception:
-        ad1f = Gtk.Adjustment(value=60, lower=0, upper=80, step_increment=5, page_increment=10, page_size=0)
-
-    self.fonts = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=ad1f)
-    self.fonts.set_digits(0)
-    self.fonts.set_draw_value(True)
-    self.fonts.set_value_pos(Gtk.PositionType.TOP)
-    self.fonts.set_hexpand(True)
-    self.fonts.set_size_request(150, 0)
-    self.fonts.set_valign(Gtk.Align.START)
-
-    try:
-        valsi = self.icon
-        ad1i = Gtk.Adjustment(value=valsi, lower=0, upper=300, step_increment=5, page_increment=10, page_size=0)
-    except Exception:
-        ad1i = Gtk.Adjustment(value=60, lower=0, upper=300, step_increment=5, page_increment=10, page_size=0)
-
-    self.icons = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=ad1i)
-    self.icons.set_digits(0)
-    self.icons.set_draw_value(True)
-    self.icons.set_value_pos(Gtk.PositionType.TOP)
-    self.icons.set_hexpand(True)
-    self.icons.set_size_request(150, 0)
-    self.icons.set_valign(Gtk.Align.START)
-
-    lists = fn._get_themes()
-    theme_model = Gtk.StringList.new(lists)
-    self.themes = Gtk.DropDown(model=theme_model)
-    active = lists.index(self.theme) if self.theme in lists else 0
-    self.themes.set_selected(active)
-
-    btn_save_settings = Gtk.Button(label="Save Settings")
-    btn_save_settings.connect("clicked", self.on_save_clicked)
-
-    hbox_opacity = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-    hbox_opacity.append(lbl_opacity)
-    hbox_opacity.append(self.hscale)
-
-    hbox_icon_size = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-    hbox_icon_size.append(lbl_icon_size)
-    hbox_icon_size.append(self.icons)
-
-    hbox_font_size = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-    hbox_font_size.append(lbl_font_size)
-    hbox_font_size.append(self.fonts)
-
-    lbl_show_text = Gtk.Label()
-    lbl_show_text.set_markup("<b>Show text:</b>")
-    lbl_show_text.set_halign(Gtk.Align.START)
-    lbl_show_text.set_valign(Gtk.Align.CENTER)
-
-    self.chk_show_text = Gtk.CheckButton()
-    self.chk_show_text.set_active(self.show_text)
-
-    hbox_show_text = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-    hbox_show_text.append(lbl_show_text)
-    hbox_show_text.append(self.chk_show_text)
-
-    # --- Button visibility checkboxes ---
-    lbl_buttons_section = Gtk.Label()
-    lbl_buttons_section.set_markup("<b>Buttons:</b>")
-    lbl_buttons_section.set_halign(Gtk.Align.START)
-    lbl_buttons_section.set_valign(Gtk.Align.CENTER)
-
-    _all_buttons = ["cancel", "shutdown", "restart", "suspend", "hibernate", "lock", "logout"]
-    _btn_display = {
-        "cancel": "Cancel", "shutdown": "Shutdown", "restart": "Restart",
-        "suspend": "Suspend", "hibernate": "Hibernate", "lock": "Lock", "logout": "Logout",
-    }
-
-    buttons_grid = Gtk.Grid()
-    buttons_grid.set_column_spacing(16)
-    buttons_grid.set_row_spacing(4)
-
-    for i, btn_name in enumerate(_all_buttons):
-        chk = Gtk.CheckButton(label=_btn_display[btn_name])
-        chk.set_active(btn_name in self.buttons)
-        setattr(self, f"chk_btn_{btn_name}", chk)
-        buttons_grid.attach(chk, i % 2, i // 2, 1, 1)
-
-    vbox_buttons_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-    vbox_buttons_section.append(lbl_buttons_section)
-    vbox_buttons_section.append(buttons_grid)
-
-    hbox_theme = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-    hbox_theme.append(lbl_theme)
-    hbox_theme.append(self.themes)
-
-    hbox_save = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-    hbox_save.append(btn_save_settings)
-
-    grid_settings = Gtk.Grid()
-    grid_settings.set_row_spacing(20)
-
-    grid_settings.attach(hbox_opacity, 0, 1, 1, 1)
-    grid_settings.attach(hbox_icon_size, 0, 2, 1, 1)
-    grid_settings.attach(hbox_font_size, 0, 3, 1, 1)
-    grid_settings.attach(hbox_show_text, 0, 4, 1, 1)
-    grid_settings.attach(vbox_buttons_section, 0, 5, 1, 1)
-    grid_settings.attach(hbox_theme, 0, 6, 1, 1)
-    grid_settings.attach(hbox_save, 0, 7, 1, 1)
-
-    vbox.append(grid_settings)
-
-    self.popover.set_child(vbox)
+    self.popover.set_child(SettingsPanel(self, Gtk, fn))
     self.popover.set_position(Gtk.PositionType.TOP)
 
     hbox8 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)

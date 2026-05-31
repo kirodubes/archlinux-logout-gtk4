@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 /usr/share/archlinux-logout/archlinux-logout.py
+python3 /usr/share/archlinux-logout/archlinux-logout.py "$@"
