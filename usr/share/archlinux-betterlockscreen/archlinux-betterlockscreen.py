@@ -4,14 +4,36 @@
 # =                  Author: Brad Heffernan                       =
 # =================================================================
 
-import gi
-import Functions as fn
-import GUI
-import Support
-import subprocess
-import threading as th
-import webbrowser
+# ── Force Python UTF-8 mode on a non-UTF-8 locale ─────────────────────────
+# Never crash on a non-UTF-8 system locale (e.g. latin-1 fr_BE). Under such a
+# locale Python encodes stdout and subprocess output with latin-1, so any
+# non-ASCII glyph raises a Unicode error. UTF-8 mode forces UTF-8 regardless of
+# LANG. Re-exec only when the locale's encoding is not UTF-8 — a normal UTF-8
+# desktop is left untouched; the guard is loop-safe (the re-exec'd process is
+# UTF-8 already).
+import codecs
+import os
 import sys
+
+if codecs.lookup(sys.getfilesystemencoding()).name != "utf-8":
+    os.environ["PYTHONUTF8"] = "1"
+    os.execv(sys.executable, [sys.executable, "-X", "utf8", *sys.argv])
+
+# Spawned terminals inherit our locale; if it is not UTF-8 their output renders
+# as mojibake. Keep the user's locale when it is already UTF-8, otherwise fall
+# back to C.UTF-8 so child output stays readable.
+_cur_locale = os.environ.get("LC_ALL") or os.environ.get("LC_CTYPE") or os.environ.get("LANG") or ""
+if "utf-8" not in _cur_locale.lower() and "utf8" not in _cur_locale.lower():
+    os.environ["LANG"] = "C.UTF-8"
+    os.environ["LC_ALL"] = "C.UTF-8"
+
+import gi  # noqa: E402
+import Functions as fn  # noqa: E402
+import GUI  # noqa: E402
+import Support  # noqa: E402
+import subprocess  # noqa: E402
+import threading as th  # noqa: E402
+import webbrowser  # noqa: E402
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('GdkPixbuf', '2.0')

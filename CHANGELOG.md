@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026.06.16
+
+### What Changed
+- Ported the ArchLinux Tweak Tool startup UTF-8 guard into **both** binaries — `archlinux-logout` and
+  `archlinux-betterlockscreen` — so neither crashes on a non-UTF-8 system locale (latin-1 `fr_BE`,
+  etc.). On a UTF-8 locale (incl. `fr_FR.UTF-8`/`it_IT.UTF-8`/`es_ES.UTF-8`) the guard is inert; the
+  apps were already robust there. Part of the ecosystem-wide UTF-8 robustness audit of all Kiro GTK4
+  apps.
+
+### Technical Details
+- `archlinux-logout.py` + `archlinux-betterlockscreen.py`: two blocks at the top of each entry point.
+  (1) Re-exec with `-X utf8` + `PYTHONUTF8=1` only when `codecs.lookup(sys.getfilesystemencoding()).name
+  != "utf-8"` — forces UTF-8 for stdout, `text=True` subprocess decoding and `open()` regardless of
+  `LANG`; loop-safe. (2) When the current locale is not UTF-8, fall back to `C.UTF-8` so spawned child
+  output stays readable. `codecs`/`os`/`sys` imports deduplicated into the guard; later imports carry
+  `# noqa: E402`.
+- The fullscreen-overlay (`archlinux-logout`) was given extra scrutiny since re-exec interacts with its
+  monitor grab — re-exec happens before any GTK work, so the relaunched process builds the overlay
+  cleanly. ruff + `py_compile` clean on both; re-exec verified under `nl_BE.iso88591`.
+
+### Files Modified
+- usr/share/archlinux-logout/archlinux-logout.py
+- usr/share/archlinux-betterlockscreen/archlinux-betterlockscreen.py
+- CHANGELOG.md
+
 ## 2026.05.31
 
 ### What Changed
