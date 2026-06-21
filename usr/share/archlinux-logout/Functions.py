@@ -301,6 +301,17 @@ def _get_logout():
         return "pkill niri"
     elif desktop in ("oxwm", "/usr/share/wayland-sessions/oxwm"):
         return "pkill oxwm"
+    elif desktop in (
+        "plasma", "plasmawayland", "plasmax11", "kde", "kde-plasma",
+        "/usr/share/wayland-sessions/plasma",
+        "/usr/share/xsessions/plasma",
+        "/usr/share/wayland-sessions/plasmawayland",
+    ):
+        # Plasma 6 native logout (X11 + Wayland). Stops graphical-session.target
+        # cleanly so kwin_wayland releases DRM-master; a bare "pkill plasma" only
+        # kills plasmashell and leaves the compositor holding the GPU -> next
+        # login is a black screen.
+        return "qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout"
     if desktop and desktop != "unknown":
         name = desktop.rstrip("/").split("/")[-1]
         return "pkill " + name
