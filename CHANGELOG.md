@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026.06.21
+
+### What Changed
+- Added a **Plasma / KDE branch** to `Functions.py::_get_logout()`. Plasma was unhandled, so logout fell
+  through to the generic `pkill <name>` fallback and ran **`pkill plasma`** — which only kills
+  `plasmashell`. On Plasma 6 Wayland the compositor (`kwin_wayland`) and the rest of
+  `graphical-session.target` kept running, holding **DRM-master**, so the next login could not drive the
+  GPU and landed on a **black screen** (recoverable only by reboot).
+
+### Technical Details
+- New branch matches `plasma` / `plasmawayland` / `plasmax11` / `kde` (and the session-file paths) and
+  returns `qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout` — Plasma 6's native logout, which
+  works on both X11 and Wayland and stops `graphical-session.target` cleanly so `kwin_wayland` releases
+  DRM-master.
+- Diagnosed live on a Plasma box: after `pkill plasma`, `kwin_wayland` still held `/dev/dri/card1` and
+  the new session logged `atomic commit failed: Permission denied`. The Kiro `systemd-logind` drop-in was
+  ruled out (failure reproduced without it).
+- flake8 + ruff clean (max line length 120).
+
 ## 2026.06.16
 
 ### What Changed
