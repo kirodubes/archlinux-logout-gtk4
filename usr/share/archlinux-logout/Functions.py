@@ -4,6 +4,7 @@
 
 import subprocess
 import os
+import re
 import shutil
 from pathlib import Path
 import configparser
@@ -207,6 +208,16 @@ def _detect_desktop():
     return desktop
 
 
+def _hyprland_lua_config():
+    """Return True when Hyprland uses the 0.55+ Lua config (needs `hl.dsp.exit()`)."""
+    try:
+        out = subprocess.run(["hyprctl", "version"], capture_output=True, text=True).stdout
+    except Exception:
+        return False
+    m = re.search(r"v?(\d+)\.(\d+)\.\d+", out)
+    return bool(m) and (int(m.group(1)), int(m.group(2))) >= (0, 55)
+
+
 def _get_logout():
     desktop = _detect_desktop()
 
@@ -276,7 +287,13 @@ def _get_logout():
             ).returncode == 0
         except Exception:
             uwsm_managed = False
-        return "uwsm stop" if uwsm_managed else "hyprctl dispatch exit"
+        if uwsm_managed:
+            return "uwsm stop"
+        # Hyprland 0.55+ runs a Lua config: `hyprctl dispatch exit` is parsed as Lua
+        # `hl.dispatch(exit)` and rejected — the dispatcher must be `hl.dsp.exit()`.
+        if _hyprland_lua_config():
+            return "hyprctl dispatch 'hl.dsp.exit()'"
+        return "hyprctl dispatch exit"
     elif desktop in ("dk", "/usr/share/xsessions/dk"):
         return "dkcmd exit"
     elif desktop in ("dusk", "/usr/share/xsessions/dusk"):

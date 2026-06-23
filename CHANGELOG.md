@@ -7,6 +7,11 @@
   legacy session name `hypr` (under the X11 `xsessions` path) and ran **`pkill Hypr`** — a hard kill.
   A modern Hyprland session reports `hyprland` (Wayland), so it didn't match and fell through to the
   generic `pkill` fallback; `pkill` also breaks uwsm's ordered shutdown.
+- **Fixed Hyprland 0.55+ Lua-config logout.** After the above fix, logout still failed on the KIROTUX
+  Hyprland edition: `hyprctl dispatch exit` errored with `hl.dispatch: expected a dispatcher`. Hyprland
+  0.55 switched to a **Lua config**, where `hyprctl dispatch <X>` is evaluated as Lua `hl.dispatch(X)`,
+  so the bare `exit` identifier is rejected. The branch now version-detects and emits the Lua dispatcher
+  **`hyprctl dispatch 'hl.dsp.exit()'`** on 0.55+, keeping legacy `hyprctl dispatch exit` for older Hyprland.
 
 ### Technical Details
 - New branch matches `hyprland` / `hypr` / the `wayland-sessions/hyprland` path and returns the
@@ -14,6 +19,9 @@
   `systemctl --user is-active` check on the uwsm-created Hyprland wayland-wm unit), otherwise
   **`hyprctl dispatch exit`**. Never `pkill` — per the Hyprland wiki, killing the compositor skips
   uwsm's ordered shutdown.
+- New helper `_hyprland_lua_config()` parses `hyprctl version` and returns `True` for major.minor
+  `>= 0.55` (regex on the first `X.Y.Z` token, robust across the `Hyprland X.Y.Z built…` and `Tag: vX.Y.Z`
+  output formats). The non-uwsm exit then branches on it: `hl.dsp.exit()` for Lua, bare `exit` for legacy.
 - flake8 + ruff clean (max line length 120).
 
 ## 2026.06.21
