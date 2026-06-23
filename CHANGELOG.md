@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026.06.23
+
+### What Changed
+- **Fixed the Hyprland branch** in `Functions.py::_get_logout()`. The old branch only matched the
+  legacy session name `hypr` (under the X11 `xsessions` path) and ran **`pkill Hypr`** — a hard kill.
+  A modern Hyprland session reports `hyprland` (Wayland), so it didn't match and fell through to the
+  generic `pkill` fallback; `pkill` also breaks uwsm's ordered shutdown.
+
+### Technical Details
+- New branch matches `hyprland` / `hypr` / the `wayland-sessions/hyprland` path and returns the
+  **graceful** command: **`uwsm stop`** when the session is uwsm-managed (detected with a
+  `systemctl --user is-active` check on the uwsm-created Hyprland wayland-wm unit), otherwise
+  **`hyprctl dispatch exit`**. Never `pkill` — per the Hyprland wiki, killing the compositor skips
+  uwsm's ordered shutdown.
+- flake8 + ruff clean (max line length 120).
+
 ## 2026.06.21
 
 ### What Changed

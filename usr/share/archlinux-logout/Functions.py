@@ -267,8 +267,16 @@ def _get_logout():
         return "pkill stumpwm"
     elif desktop in ("leftwm", "/usr/share/xsessions/leftwm"):
         return "pkill leftwm"
-    elif desktop in ("hypr", "/usr/share/xsessions/hypr"):
-        return "pkill Hypr"
+    elif desktop in ("hyprland", "hypr", "/usr/share/wayland-sessions/hyprland"):
+        # Hyprland (Wayland). Under uwsm use its graceful, ordered shutdown; otherwise the
+        # native compositor exit. Never pkill — it's a hard kill and breaks uwsm's shutdown.
+        try:
+            uwsm_managed = subprocess.run(
+                ["systemctl", "--user", "is-active", "--quiet", "wayland-wm@Hyprland.service"]
+            ).returncode == 0
+        except Exception:
+            uwsm_managed = False
+        return "uwsm stop" if uwsm_managed else "hyprctl dispatch exit"
     elif desktop in ("dk", "/usr/share/xsessions/dk"):
         return "dkcmd exit"
     elif desktop in ("dusk", "/usr/share/xsessions/dusk"):
