@@ -22,6 +22,11 @@
 - New helper `_hyprland_lua_config()` parses `hyprctl version` and returns `True` for major.minor
   `>= 0.55` (regex on the first `X.Y.Z` token, robust across the `Hyprland X.Y.Z built…` and `Tag: vX.Y.Z`
   output formats). The non-uwsm exit then branches on it: `hl.dsp.exit()` for Lua, bare `exit` for legacy.
+- **Removed the dead duplicate Hyprland branch** further down the wayland section. Its `hyprland` /
+  `wayland-sessions/hyprland` entries were unreachable (caught by the primary branch above), and its
+  `hyprland-uwsm` entries wrongly returned `hyprctl dispatch exit`. Folded the `hyprland-uwsm` /
+  `wayland-sessions/hyprland-uwsm` names into the single primary branch so all Hyprland variants share
+  the uwsm-aware + Lua-aware logic.
 - flake8 + ruff clean (max line length 120).
 
 ## 2026.06.21

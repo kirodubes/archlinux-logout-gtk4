@@ -278,7 +278,8 @@ def _get_logout():
         return "pkill stumpwm"
     elif desktop in ("leftwm", "/usr/share/xsessions/leftwm"):
         return "pkill leftwm"
-    elif desktop in ("hyprland", "hypr", "/usr/share/wayland-sessions/hyprland"):
+    elif desktop in ("hyprland", "hypr", "hyprland-uwsm",
+                     "/usr/share/wayland-sessions/hyprland", "/usr/share/wayland-sessions/hyprland-uwsm"):
         # Hyprland (Wayland). Under uwsm use its graceful, ordered shutdown; otherwise the
         # native compositor exit. Never pkill — it's a hard kill and breaks uwsm's shutdown.
         try:
@@ -313,9 +314,6 @@ def _get_logout():
     # wayland desktops
     elif desktop in ("sway", "/usr/share/wayland-sessions/sway"):
         return "pkill sway"
-    elif desktop in ("hyprland", "hyprland-uwsm",
-                     "/usr/share/wayland-sessions/hyprland", "/usr/share/wayland-sessions/hyprland-uwsm"):
-        return "hyprctl dispatch exit"
     elif desktop in ("river", "/usr/share/wayland-sessions/river"):
         return "pkill river"
     elif desktop in ("wayfire", "/usr/share/wayland-sessions/wayfire"):
