@@ -142,10 +142,67 @@ class TransparentWindow(Gtk.ApplicationWindow):
     def _build_settings_window(self):
         self.set_title("ArchLinux Logout Settings")
         self.set_decorated(True)
-        self.set_resizable(False)
-        self.set_default_size(420, 520)
-        self.set_child(GUI.SettingsPanel(self, Gtk, fn))
+        self.set_resizable(True)
+        self.set_default_size(480, 640)
+
+        headerbar = Gtk.HeaderBar()
+        headerbar.set_show_title_buttons(True)
+        self.set_titlebar(headerbar)
+
+        self._load_settings_css()
+
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+
+        scroller = Gtk.ScrolledWindow()
+        scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroller.set_vexpand(True)
+        scroller.set_child(GUI.SettingsPanel(self, Gtk, fn))
+        outer.append(scroller)
+
+        outer.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
+
+        action_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        action_bar.set_margin_start(12)
+        action_bar.set_margin_end(12)
+        action_bar.set_margin_top(8)
+        action_bar.set_margin_bottom(10)
+
+        spacer = Gtk.Box()
+        spacer.set_hexpand(True)
+        action_bar.append(spacer)
+
+        btn_betterlockscreen = Gtk.Button(label="Open BetterLockScreen")
+        btn_betterlockscreen.set_tooltip_text("Configure the lock screen wallpaper and blur")
+        btn_betterlockscreen.connect("clicked", self.on_betterlockscreen_clicked)
+        action_bar.append(btn_betterlockscreen)
+        action_bar.append(self.btn_save_settings)
+
+        outer.append(action_bar)
+
+        self.set_child(outer)
         self.present()
+
+    def _load_settings_css(self):
+        css = (
+            b"label#title { font-size: 20px; font-weight: 600; }"
+            b"label.info-label { color: alpha(currentColor, 0.65); font-size: 11px; }"
+            b".support-button { color: #e0567a; }"
+            b".support-button:hover { background-color: alpha(#e0567a, 0.18); }"
+        )
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_display(
+            self.display,
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
+    def on_betterlockscreen_clicked(self, _widget):
+        t = threading.Thread(
+            target=lambda: fn.subprocess.Popen(["archlinux-betterlockscreen"]),
+            daemon=True,
+        )
+        t.start()
 
     def _after_save(self):
         if getattr(self, "popover", None):

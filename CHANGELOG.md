@@ -1,5 +1,61 @@
 # Changelog
 
+## 2026.06.29
+
+### Settings window matured into a real standalone app
+
+**What Changed.** The standalone `archlinux-logout --settings` window was reworked from a
+popover-panel-in-a-window into a proper desktop app, matching the Alacritty Tweak Tool and
+Fish Tweak Tool chrome:
+
+- A real **`Gtk.HeaderBar`** title bar with window controls (minimise/maximise/close).
+- The in-content header row now uses the shared Kiro pattern — a `#title` label on the left,
+  a styled pink **♥ Support** button (`.support-button`), and a **Quit** button on the right.
+- Settings are grouped into titled **cards** (Appearance / Buttons / Theme) instead of one
+  flat grid.
+- A bottom action bar, pinned outside the scroll area, holds **Open BetterLockScreen**
+  (launches the `archlinux-betterlockscreen` companion) and **Save Settings** at the
+  bottom-right.
+
+The on-screen logout popover is unchanged — it still uses the compact flat panel.
+
+**Technical Details.**
+- `usr/share/archlinux-logout/GUI.py`: `SettingsPanel` now branches cleanly — the popover
+  path keeps the flat grid (with Save inside); the `settings_only` path builds the
+  header row, three `_settings_card()` titled frames, and the about body. The shared widgets
+  (`buttons_grid`, `self.themes`) are constructed once and only parented in the branch that
+  uses them (fixes a double-parent `gtk_box_append` assertion). Save button is stashed on
+  `self.btn_save_settings` so the window can place it in the bottom bar. The header replaces
+  the old inline-markup heart with a CSS-classed `♥ Support` button.
+- `usr/share/archlinux-logout/archlinux-logout.py`: `_build_settings_window` sets a
+  `Gtk.HeaderBar` titlebar, loads inline CSS (`_load_settings_css`: `#title`, `.info-label`,
+  `.support-button`), and lays out `[scroller | separator | action bar]`. New
+  `on_betterlockscreen_clicked` launches the companion via `Popen` in a daemon thread.
+
+**Files Modified.**
+- `usr/share/archlinux-logout/GUI.py`
+- `usr/share/archlinux-logout/archlinux-logout.py`
+
+## 2026.06.27
+
+### Settings window: header toolbar + "what this app does" body
+
+**What Changed.** The standalone Settings window now opens with a toolbar at the top —
+title **ArchLinux Logout Settings**, a pink **♥ Support** button (opens a Support-Kiro
+dialog with the funding channels), and a **Quit** button — matching the other Kiro tweak
+tools. Below the settings, a descriptive body explains what the app is (the logout power
+screen) and what each control changes (opacity, icon/font size, show-text, which buttons,
+theme). Both only appear in the standalone settings window, not the on-screen popover.
+
+**Technical Details.**
+- `usr/share/archlinux-logout/GUI.py`: added `_FUNDING`, `_open_url`, `_show_support_dialog`,
+  and — inside `SettingsPanel`, gated on `settings_only` — the header toolbar (top) and the
+  about body (bottom). The pink heart uses inline Pango markup (`#e0567a`) so no CSS file is
+  needed.
+- `usr/share/archlinux-logout/archlinux-logout.py`: `_build_settings_window` now wraps the
+  panel in a `Gtk.ScrolledWindow`, makes the window resizable, and enlarges the default size
+  (460×760) so the added header + body never clip.
+
 ## 2026.06.23
 
 ### What Changed

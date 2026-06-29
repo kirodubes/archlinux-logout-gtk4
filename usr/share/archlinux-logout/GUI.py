@@ -3,6 +3,82 @@
 # =====================================================
 
 
+# Funding channels — GitHub Sponsors first (~100% payout). Keep in sync with
+# kiro-website .github/FUNDING.yml if those change.
+_FUNDING = [
+    ("GitHub Sponsors", "https://github.com/sponsors/erikdubois", "best value — almost all goes to the project"),
+    ("Ko-fi", "https://ko-fi.com/erikdubois", "buy a coffee — one-off tip"),
+    ("Patreon", "https://www.patreon.com/kiroproject", "membership tiers + perks"),
+    ("YouTube membership", "https://www.youtube.com/@ErikDubois/join", "join on YouTube"),
+    ("PayPal", "https://www.paypal.me/erikdubois", "direct one-off"),
+]
+
+
+def _open_url(Gtk, parent, url):
+    Gtk.UriLauncher.new(url).launch(parent, None, None)
+
+
+def _show_support_dialog(Gtk, parent):
+    dlg = Gtk.Window(title="Support Kiro", transient_for=parent, modal=True)
+    dlg.set_default_size(440, -1)
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+    for side in ("start", "end", "top", "bottom"):
+        getattr(box, f"set_margin_{side}")(18)
+
+    heading = Gtk.Label()
+    heading.set_xalign(0.0)
+    heading.set_markup("<b>Support Kiro</b>")
+    box.append(heading)
+
+    intro = Gtk.Label()
+    intro.set_xalign(0.0)
+    intro.set_wrap(True)
+    intro.set_max_width_chars(52)
+    intro.set_label(
+        "Kiro and its tools are built by one person, for the community — and kept free. "
+        "If ArchLinux Logout saves you time, a little support keeps the work going. "
+        "Thank you for being here."
+    )
+    box.append(intro)
+
+    for name, url, note in _FUNDING:
+        btn = Gtk.Button()
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        lbl = Gtk.Label()
+        lbl.set_xalign(0.0)
+        lbl.set_markup(f"<b>{name}</b>")
+        sub = Gtk.Label(label=note)
+        sub.set_xalign(0.0)
+        content.append(lbl)
+        content.append(sub)
+        btn.set_child(content)
+        btn.connect("clicked", lambda _w, u=url: _open_url(Gtk, dlg, u))
+        box.append(btn)
+
+    close = Gtk.Button(label="Close")
+    close.set_halign(Gtk.Align.END)
+    close.connect("clicked", lambda _w: dlg.close())
+    box.append(close)
+
+    dlg.set_child(box)
+    dlg.present()
+
+
+def _settings_card(Gtk, title, child):
+    """Wrap a settings group in a titled frame (the standalone window's 'card' look)."""
+    child.set_margin_start(10)
+    child.set_margin_end(10)
+    child.set_margin_top(8)
+    child.set_margin_bottom(10)
+    title_lbl = Gtk.Label()
+    title_lbl.set_markup(f"<b>{title}</b>")
+    frame = Gtk.Frame()
+    frame.set_label_widget(title_lbl)
+    frame.set_child(child)
+    frame.set_margin_bottom(12)
+    return frame
+
+
 def SettingsPanel(self, Gtk, fn):
     """Build the settings widget tree, shared by the overlay popover and the standalone settings window."""
     vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -81,6 +157,7 @@ def SettingsPanel(self, Gtk, fn):
 
     btn_save_settings = Gtk.Button(label="Save Settings")
     btn_save_settings.connect("clicked", self.on_save_clicked)
+    self.btn_save_settings = btn_save_settings
 
     hbox_opacity = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
     hbox_opacity.append(lbl_opacity)
@@ -107,11 +184,6 @@ def SettingsPanel(self, Gtk, fn):
     hbox_show_text.append(self.chk_show_text)
 
     # --- Button visibility checkboxes ---
-    lbl_buttons_section = Gtk.Label()
-    lbl_buttons_section.set_markup("<b>Buttons:</b>")
-    lbl_buttons_section.set_halign(Gtk.Align.START)
-    lbl_buttons_section.set_valign(Gtk.Align.CENTER)
-
     _all_buttons = ["cancel", "shutdown", "restart", "suspend", "hibernate", "lock", "logout"]
     _btn_display = {
         "cancel": "Cancel", "shutdown": "Shutdown", "restart": "Restart",
@@ -128,34 +200,94 @@ def SettingsPanel(self, Gtk, fn):
         setattr(self, f"chk_btn_{btn_name}", chk)
         buttons_grid.attach(chk, i % 2, i // 2, 1, 1)
 
-    vbox_buttons_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-    vbox_buttons_section.append(lbl_buttons_section)
-    vbox_buttons_section.append(buttons_grid)
+    settings_only = getattr(self, "settings_only", False)
 
-    hbox_theme = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-    hbox_theme.append(lbl_theme)
-    hbox_theme.append(self.themes)
+    if not settings_only:
+        # --- Overlay popover: compact flat grid (Save lives inside) ---
+        lbl_buttons_section = Gtk.Label()
+        lbl_buttons_section.set_markup("<b>Buttons:</b>")
+        lbl_buttons_section.set_halign(Gtk.Align.START)
+        lbl_buttons_section.set_valign(Gtk.Align.CENTER)
 
-    hbox_save = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-    hbox_save.append(btn_save_settings)
+        vbox_buttons_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        vbox_buttons_section.append(lbl_buttons_section)
+        vbox_buttons_section.append(buttons_grid)
 
-    if getattr(self, "settings_only", False):
-        btn_exit = Gtk.Button(label="Exit")
-        btn_exit.connect("clicked", self.on_exit_clicked)
-        hbox_save.append(btn_exit)
+        hbox_theme = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        hbox_theme.append(lbl_theme)
+        hbox_theme.append(self.themes)
 
-    grid_settings = Gtk.Grid()
-    grid_settings.set_row_spacing(20)
+        hbox_save = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        hbox_save.append(btn_save_settings)
 
-    grid_settings.attach(hbox_opacity, 0, 1, 1, 1)
-    grid_settings.attach(hbox_icon_size, 0, 2, 1, 1)
-    grid_settings.attach(hbox_font_size, 0, 3, 1, 1)
-    grid_settings.attach(hbox_show_text, 0, 4, 1, 1)
-    grid_settings.attach(vbox_buttons_section, 0, 5, 1, 1)
-    grid_settings.attach(hbox_theme, 0, 6, 1, 1)
-    grid_settings.attach(hbox_save, 0, 7, 1, 1)
+        grid_settings = Gtk.Grid()
+        grid_settings.set_row_spacing(20)
+        grid_settings.attach(hbox_opacity, 0, 1, 1, 1)
+        grid_settings.attach(hbox_icon_size, 0, 2, 1, 1)
+        grid_settings.attach(hbox_font_size, 0, 3, 1, 1)
+        grid_settings.attach(hbox_show_text, 0, 4, 1, 1)
+        grid_settings.attach(vbox_buttons_section, 0, 5, 1, 1)
+        grid_settings.attach(hbox_theme, 0, 6, 1, 1)
+        grid_settings.attach(hbox_save, 0, 7, 1, 1)
+        vbox.append(grid_settings)
+        return vbox
 
-    vbox.append(grid_settings)
+    # --- Standalone settings window: header + cards + about ---
+    hbox_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    hbox_header.set_margin_bottom(8)
+
+    lbl_app_title = Gtk.Label(label="ArchLinux Logout Settings", xalign=0)
+    lbl_app_title.set_name("title")
+    lbl_app_title.set_hexpand(True)
+
+    btn_support = Gtk.Button(label="♥ Support")
+    btn_support.set_tooltip_text("Support Kiro's development")
+    btn_support.add_css_class("support-button")
+    btn_support.connect("clicked", lambda _w: _show_support_dialog(Gtk, self))
+
+    btn_quit = Gtk.Button(label="Quit")
+    btn_quit.connect("clicked", self.on_exit_clicked)
+
+    hbox_header.append(lbl_app_title)
+    hbox_header.append(btn_support)
+    hbox_header.append(btn_quit)
+    vbox.append(hbox_header)
+    vbox.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
+
+    appearance = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+    appearance.append(hbox_opacity)
+    appearance.append(hbox_icon_size)
+    appearance.append(hbox_font_size)
+    appearance.append(hbox_show_text)
+    vbox.append(_settings_card(Gtk, "Appearance", appearance))
+
+    vbox.append(_settings_card(Gtk, "Buttons", buttons_grid))
+
+    theme_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+    theme_box.append(self.themes)
+    vbox.append(_settings_card(Gtk, "Theme", theme_box))
+
+    lbl_about = Gtk.Label()
+    lbl_about.set_wrap(True)
+    lbl_about.set_xalign(0.0)
+    lbl_about.set_margin_top(4)
+    lbl_about.add_css_class("info-label")
+    lbl_about.set_markup(
+        "<b>What is this?</b>\n"
+        "ArchLinux Logout is the power screen shown when you log out — the row of buttons "
+        "for Shutdown, Restart, Suspend, Hibernate, Lock, Logout and Cancel.\n\n"
+        "<b>What you can change here</b>\n"
+        "• <b>Opacity</b> — how see-through the logout screen's background is\n"
+        "• <b>Icon size</b> — how big the power-button icons are\n"
+        "• <b>Font size</b> — the size of the button labels\n"
+        "• <b>Show text</b> — whether labels appear under the icons\n"
+        "• <b>Buttons</b> — which power actions are offered (tick the ones you want)\n"
+        "• <b>Theme</b> — the visual style and icon set of the logout screen\n\n"
+        "Click <b>Save Settings</b> to apply. Changes take effect the next time the "
+        "logout screen opens."
+    )
+    vbox.append(lbl_about)
+
     return vbox
 
 
