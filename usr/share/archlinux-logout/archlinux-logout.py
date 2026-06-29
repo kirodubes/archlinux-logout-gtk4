@@ -143,7 +143,7 @@ class TransparentWindow(Gtk.ApplicationWindow):
         self.set_title("ArchLinux Logout Settings")
         self.set_decorated(True)
         self.set_resizable(True)
-        self.set_default_size(480, 640)
+        self.set_default_size(520, 800)
 
         headerbar = Gtk.HeaderBar()
         headerbar.set_show_title_buttons(True)
