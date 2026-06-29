@@ -2,6 +2,11 @@
 
 ## 2026.06.29
 
+### Added to the new "Kiro Apps" menu
+- Appended `X-Kiro-Apps;` to `archlinux-logout-settings.desktop` and
+  `archlinux-betterlockscreen.desktop` (in `usr/share/applications/`) so both appear in
+  the new Kiro Apps launcher folder. Non-destructive — still show under Settings/System.
+
 ### Settings window matured into a real standalone app
 
 **What Changed.** The standalone `archlinux-logout --settings` window was reworked from a
