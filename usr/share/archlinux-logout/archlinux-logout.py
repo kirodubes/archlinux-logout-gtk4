@@ -144,6 +144,8 @@ class TransparentWindow(Gtk.ApplicationWindow):
         self.set_decorated(True)
         self.set_resizable(True)
         self.set_default_size(520, 800)
+        # Floor the window so it can't be dragged smaller than its content
+        self.set_size_request(480, 500)
 
         headerbar = Gtk.HeaderBar()
         headerbar.set_show_title_buttons(True)

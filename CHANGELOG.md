@@ -31,6 +31,8 @@ The on-screen logout popover is unchanged — it still uses the compact flat pan
   `Gtk.HeaderBar` titlebar, loads inline CSS (`_load_settings_css`: `#title`, `.info-label`,
   `.support-button`), and lays out `[scroller | separator | action bar]`. New
   `on_betterlockscreen_clicked` launches the companion via `Popen` in a daemon thread.
+  Also added a `set_size_request(480, 500)` floor so the resizable window can't be dragged
+  smaller than its content (buttons were clipping when shrunk).
 
 **Files Modified.**
 - `usr/share/archlinux-logout/GUI.py`
