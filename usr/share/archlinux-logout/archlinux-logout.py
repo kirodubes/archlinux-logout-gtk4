@@ -717,7 +717,7 @@ class TransparentWindow(Gtk.ApplicationWindow):
                     self.active = False
             else:
                 self._cleanup_runtime_files()
-                self.__exec_cmd(self.cmd_lock)
+                self.__exec_cmd(fn.resolve_lock_cmd(self.cmd_lock))
                 self.get_application().quit()
 
         elif data == self.binds.get("settings"):

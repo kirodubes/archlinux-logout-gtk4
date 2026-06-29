@@ -16,6 +16,25 @@ if envvar == "wayland":
 
 home = os.path.expanduser("~")
 
+# X11-only lockers — betterlockscreen wraps i3lock-color, neither runs on Wayland.
+_X11_LOCKERS = ("betterlockscreen", "i3lock")
+# Wayland lockers, in preference order. hyprlock first (Kiro's Hyprland edition);
+# add swaylock/gtklock here to extend coverage to other Wayland compositors.
+_WAYLAND_LOCKERS = ("hyprlock",)
+
+
+def resolve_lock_cmd(cmd_lock):
+    """Swap an X11-only lock command for a Wayland locker when in a Wayland session."""
+    if not sessionw:
+        return cmd_lock
+    first_word = cmd_lock.split(maxsplit=1)[0] if cmd_lock.split() else ""
+    if first_word not in _X11_LOCKERS:
+        return cmd_lock
+    for locker in _WAYLAND_LOCKERS:
+        if shutil.which(locker):
+            return locker
+    return cmd_lock
+
 base_dir = os.path.dirname(os.path.realpath(__file__))
 working_dir = "".join(
     [str(Path(__file__).parents[2]), "/share/archlinux-logout-themes/"]
@@ -70,7 +89,7 @@ def cache_bl(self, GLib):
 
         GLib.idle_add(self.lbl_stat.set_text, "")
         os.unlink("/tmp/archlinux-logout.lock")
-        os.system(self.cmd_lock)
+        os.system(resolve_lock_cmd(self.cmd_lock))
         from gi.repository import Gtk
         app = Gtk.Application.get_default()
         if app:

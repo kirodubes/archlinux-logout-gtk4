@@ -2,6 +2,31 @@
 
 ## 2026.06.29
 
+### Lock screen now works on Wayland / Hyprland
+
+**What Changed.** The Lock action used `betterlockscreen -l` (i3lock-color), which is X11-only
+and silently failed under a Wayland session (Hyprland). Locking now transparently falls back to
+a Wayland locker (`hyprlock`) when running on Wayland, while X11 editions keep betterlockscreen
+unchanged.
+
+**Technical Details.**
+- New `Functions.py::resolve_lock_cmd(cmd_lock)` — if `XDG_SESSION_TYPE == wayland` and the
+  configured locker is X11-only (`betterlockscreen`/`i3lock`), it returns the first available
+  Wayland locker (currently `hyprlock`; list `_WAYLAND_LOCKERS` is the single place to extend
+  to swaylock/gtklock). Otherwise the configured command passes through verbatim.
+- Routed **both** lock exec sites through the resolver: `archlinux-logout.py` lock else-branch
+  and `Functions.py::cache_bl` (`os.system`). The betterlockscreen image-cache priming branch
+  is intentionally kept on Wayland — `betterlockscreen -u` is pure ImageMagick and the blurred
+  PNGs it writes to `~/.cache/betterlockscreen/current/` are exactly what hyprlock displays as
+  its background.
+- The shipped `/etc/archlinux-logout.conf` keeps `lock=betterlockscreen …` — the same package
+  serves X11 (chadwm) and Wayland editions, so the swap is runtime session-detection only, not
+  a config change.
+
+**Files Modified.**
+- `usr/share/archlinux-logout/Functions.py`
+- `usr/share/archlinux-logout/archlinux-logout.py`
+
 ### Added to the new "Kiro Apps" menu
 - Appended `X-Kiro-Apps;` to `archlinux-logout-settings.desktop` and
   `archlinux-betterlockscreen.desktop` (in `usr/share/applications/`) so both appear in
