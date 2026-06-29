@@ -36,6 +36,34 @@ The on-screen logout popover is unchanged — it still uses the compact flat pan
 - `usr/share/archlinux-logout/GUI.py`
 - `usr/share/archlinux-logout/archlinux-logout.py`
 
+### BetterLockScreen companion gained the same top bars
+
+**What Changed.** The `archlinux-betterlockscreen` GUI now carries the same two top bars as
+Fish Tweak Tool / the logout settings window — it previously had neither:
+
+- A real **`Gtk.HeaderBar`** title bar with window controls (minimise/maximise/close).
+- An in-content **header row** above the body — a `#blstitle` label on the left, a
+  `betterlockscreen v<version>` label, a pink **♥ Support** button (`.support-button`,
+  opens the existing Credits/Support dialog), and a **Quit** button — followed by a separator.
+
+The existing bottom **Credits** button is left in place (it opens the same Support dialog).
+
+**Technical Details.**
+- `usr/share/archlinux-betterlockscreen/archlinux-betterlockscreen.py`: added `_build_headerbar()`
+  (plain `Gtk.HeaderBar` titlebar with `show_title_buttons`), called from `__init__`.
+- `usr/share/archlinux-betterlockscreen/GUI.py`: new `hbox_header` content header packed at the
+  top of `vbox` (with a separator); the inline CSS provider now also defines `#blstitle`,
+  `.info-label`, and `.support-button`. **♥ Support** reuses `on_support_clicked`; **Quit**
+  calls the window's `close` handler (which clears the lock file and quits).
+- `usr/share/archlinux-betterlockscreen/Functions.py`: new `get_betterlockscreen_version()` —
+  parses `VERSION=` out of the `betterlockscreen` script (display-free; `--version` would
+  shell out to `xset` and need an X display).
+
+**Files Modified.**
+- `usr/share/archlinux-betterlockscreen/archlinux-betterlockscreen.py`
+- `usr/share/archlinux-betterlockscreen/GUI.py`
+- `usr/share/archlinux-betterlockscreen/Functions.py`
+
 ## 2026.06.27
 
 ### Settings window: header toolbar + "what this app does" body

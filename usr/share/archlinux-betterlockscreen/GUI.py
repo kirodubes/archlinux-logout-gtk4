@@ -11,12 +11,39 @@ def GUI(self, Gtk, GdkPixbuf, Gdk, th, fn):
     self.vbox.set_margin_bottom(10)
     self.set_child(self.vbox)
 
+    hbox_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
     hbox1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
     hbox2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
     hbox5 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
     hbox6 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
     hbox7 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
     hbox8 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+
+    # =======================================================
+    #                       TOP BAR (content header)
+    # =======================================================
+    title = Gtk.Label(label="ArchLinux BetterLockScreen", xalign=0)
+    title.set_name("blstitle")
+    title.set_hexpand(True)
+
+    version = fn.get_betterlockscreen_version()
+    ver_text = f"betterlockscreen v{version}" if version[:1].isdigit() else f"betterlockscreen {version}"
+    lbl_version = Gtk.Label(label=ver_text)
+    lbl_version.add_css_class("info-label")
+    lbl_version.set_valign(Gtk.Align.CENTER)
+
+    btn_support = Gtk.Button(label="♥ Support")
+    btn_support.set_tooltip_text("Support development")
+    btn_support.add_css_class("support-button")
+    btn_support.connect("clicked", self.on_support_clicked)
+
+    btn_quit = Gtk.Button(label="Quit")
+    btn_quit.connect("clicked", self.close)
+
+    hbox_header.append(title)
+    hbox_header.append(lbl_version)
+    hbox_header.append(btn_support)
+    hbox_header.append(btn_quit)
 
     # =======================================================
     #                       App Notifications
@@ -34,7 +61,13 @@ def GUI(self, Gtk, GdkPixbuf, Gdk, th, fn):
     notification_bg.append(self.notification_label)
 
     css_notif = Gtk.CssProvider()
-    css_notif.load_from_data(b".notification-bar { background-color: #1a1a1a; }")
+    css_notif.load_from_data(
+        b".notification-bar { background-color: #1a1a1a; }"
+        b"label#blstitle { font-size: 20px; font-weight: 600; }"
+        b"label.info-label { color: alpha(currentColor, 0.65); font-size: 11px; }"
+        b".support-button { color: #e0567a; }"
+        b".support-button:hover { background-color: alpha(#e0567a, 0.18); }"
+    )
     Gtk.StyleContext.add_provider_for_display(
         Gdk.Display.get_default(),
         css_notif,
@@ -133,6 +166,8 @@ def GUI(self, Gtk, GdkPixbuf, Gdk, th, fn):
     #                       PACK TO WINDOW
     # ==========================================================
 
+    self.vbox.append(hbox_header)    # top bar
+    self.vbox.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
     self.vbox.append(hbox1)          # notify
     self.vbox.append(hbox6)          # load row
     self.vbox.append(hbox8)          # search row

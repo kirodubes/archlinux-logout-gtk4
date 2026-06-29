@@ -45,6 +45,7 @@ class Main(Gtk.ApplicationWindow):
         super().__init__(application=app, title="ArchLinux BetterLockScreen")
         self.set_default_size(1100, 700)
         self.connect("close-request", self.close)
+        self._build_headerbar()
 
         self.timeout_id = None
         self.image_path = None
@@ -82,6 +83,11 @@ class Main(Gtk.ApplicationWindow):
 
         # Defer flowbox loading so the window is shown first
         GLib.idle_add(self._load_initial_flowbox)
+
+    def _build_headerbar(self):
+        header = Gtk.HeaderBar()
+        header.set_show_title_buttons(True)
+        self.set_titlebar(header)
 
     def _load_initial_flowbox(self):
         t = th.Thread(target=self.create_flowbox, args=(self.loc.get_text(), False))

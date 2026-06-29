@@ -50,6 +50,21 @@ def get_saved_path():
     return lines[pos].split("=")[1].strip()
 
 
+def get_betterlockscreen_version():
+    """Return the installed betterlockscreen version, or 'unknown'."""
+    # Parse the script directly — `betterlockscreen --version` shells out to xset
+    # and needs an X display, which is not always available at startup.
+    for path in ("/usr/bin/betterlockscreen", "/bin/betterlockscreen"):
+        try:
+            with open(path, "r") as f:
+                for line in f:
+                    if line.strip().startswith("VERSION="):
+                        return line.split("=", 1)[1].strip().strip('"')
+        except OSError:
+            continue
+    return "unknown"
+
+
 def show_in_app_notification(self, message):
     if self.timeout_id is not None:
         GLib.source_remove(self.timeout_id)
