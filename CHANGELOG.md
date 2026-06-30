@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026.06.30
+
+### Lock screen now works on Plasma (native KScreenLocker, X11 + Wayland)
+
+**What Changed.** Plasma lock was unreliable: on Wayland `resolve_lock_cmd` swapped the X11
+locker for `hyprlock` (not installed on a stock Plasma box, so it fell back to betterlockscreen
+which can't run on Wayland); on X11 it relied on betterlockscreen/i3lock-color actually being
+installed, which isn't guaranteed on a Plasma box. Plasma now routes to the native KDE locker
+via `loginctl lock-session` on **both** session types — always present on a Plasma install,
+zero extra dependencies.
+
+**Technical Details.**
+- `Functions.py`: added module-level `session_kde` detection from `XDG_CURRENT_DESKTOP`
+  (matches `kde`/`plasma`).
+- `resolve_lock_cmd` reordered: the configured-locker check runs first (custom lockers pass
+  through verbatim); then Plasma/KDE returns `loginctl lock-session` regardless of X11/Wayland;
+  then the `sessionw` guard and `_WAYLAND_LOCKERS` (`hyprlock`) path handle other Wayland
+  compositors. X11 non-Plasma sessions keep betterlockscreen unchanged.
+- DE-agnostic and dependency-free — no hyprlock pull onto Plasma, no blur-cache pipeline needed.
+
+**Tradeoff.** Plasma X11 users who had betterlockscreen now get the standard KScreenLocker
+instead of its blurred-image lock — intentional, since Plasma ships its own locker and
+betterlockscreen is not a guaranteed dependency there.
+
+**Files Modified.**
+- `usr/share/archlinux-logout/Functions.py`
+
 ## 2026.06.29
 
 ### Lock screen now works on Wayland / Hyprland

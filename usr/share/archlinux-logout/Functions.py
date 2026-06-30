@@ -14,6 +14,10 @@ sessionw = False
 if envvar == "wayland":
     sessionw = True
 
+# Plasma/KDE Wayland gets the native KScreenLocker via logind rather than hyprlock.
+_desktop = os.environ.get("XDG_CURRENT_DESKTOP", "").lower()
+session_kde = "kde" in _desktop or "plasma" in _desktop
+
 home = os.path.expanduser("~")
 
 # X11-only lockers — betterlockscreen wraps i3lock-color, neither runs on Wayland.
@@ -24,12 +28,18 @@ _WAYLAND_LOCKERS = ("hyprlock",)
 
 
 def resolve_lock_cmd(cmd_lock):
-    """Swap an X11-only lock command for a Wayland locker when in a Wayland session."""
-    if not sessionw:
-        return cmd_lock
+    """Swap an X11-only lock command for the right locker on the current session."""
     first_word = cmd_lock.split(maxsplit=1)[0] if cmd_lock.split() else ""
     if first_word not in _X11_LOCKERS:
         return cmd_lock
+    # Plasma (X11 or Wayland): hand off to KScreenLocker via logind — always present
+    # on a Plasma install, no dependency on betterlockscreen/i3lock-color.
+    if session_kde:
+        return "loginctl lock-session"
+    if not sessionw:
+        return cmd_lock
+    # Other Wayland compositors (Hyprland etc.): i3lock/betterlockscreen can't grab
+    # the session, so fall back to the first available native Wayland locker.
     for locker in _WAYLAND_LOCKERS:
         if shutil.which(locker):
             return locker
