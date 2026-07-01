@@ -341,23 +341,27 @@ def _get_logout():
     elif desktop in ("oxwm", "/usr/share/xsessions/oxwm"):
         return "pkill oxwm"
     # wayland desktops
-    # These ship waybar as a separate top-level process (not a child of the compositor),
-    # so pkill-ing the compositor alone can leave it orphaned across TWM switches on the
-    # same box. Kill it first, then the compositor.
-    elif desktop in ("sway", "/usr/share/wayland-sessions/sway"):
-        return "pkill waybar; pkill sway"
+    # These ship waybar/mako/hypridle/nm-applet as separate top-level processes
+    # (not children of the compositor), so pkill-ing the compositor alone leaves
+    # them orphaned across restarts/TWM switches on the same box — they pile up
+    # and fight each other (e.g. hypridle over org.freedesktop.ScreenSaver).
+    # Kill the companion daemons first, then the compositor.
+    _waybar_stack = "pkill waybar; pkill mako; pkill hypridle; pkill nm-applet; "
+    if desktop in ("sway", "/usr/share/wayland-sessions/sway"):
+        return _waybar_stack + "pkill sway"
     elif desktop in ("river", "/usr/share/wayland-sessions/river"):
-        return "pkill waybar; pkill river"
+        return _waybar_stack + "pkill river"
     elif desktop in ("wayfire", "/usr/share/wayland-sessions/wayfire"):
-        return "pkill waybar; pkill wayfire"
+        return _waybar_stack + "pkill wayfire"
     elif desktop in ("newm", "/usr/share/wayland-sessions/newm"):
         return "pkill newm"
     elif desktop in ("niri", "/usr/share/wayland-sessions/niri"):
-        return "pkill waybar; pkill niri"
+        # niri runs noctalia-shell (qs -c noctalia-shell), not waybar/mako/hypridle.
+        return "pkill -f 'qs -c noctalia-shell'; pkill niri"
     elif desktop in ("labwc", "/usr/share/wayland-sessions/labwc"):
-        return "pkill waybar; pkill labwc"
+        return _waybar_stack + "pkill labwc"
     elif desktop in ("mango", "/usr/share/wayland-sessions/mango"):
-        return "pkill waybar; pkill mango"
+        return _waybar_stack + "pkill mango"
     elif desktop in ("dwl", "/usr/share/wayland-sessions/dwl"):
         # dwl ships its own suckless-style bar (dwlb), not waybar.
         return "pkill dwl"

@@ -2,22 +2,31 @@
 
 ## 2026.07.01
 
-### Kill waybar before exiting waybar-based Wayland TWMs; add labwc/mango/dwl logout support
+### Kill the full companion-daemon stack before exiting waybar-based Wayland TWMs; add labwc/mango/dwl logout support; fix niri's bar name
 
-**What Changed.** Logging out of sway, river, wayfire, or niri only `pkill`ed the compositor
-itself. waybar runs as an independent top-level process (not a compositor child), so it could
-be left orphaned across TWM switches when testing multiple Wayland editions back-to-back on
-the same box (picard). Also added logout support for three KIROTUX editions not yet wired:
-labwc, mango, and dwl.
+**What Changed.** Root-caused on picard (real-metal labwc test box): `archlinux-logout` was
+taking 10-14s to render on `Super+X`. Traced through GTK a11y and xdg-desktop-portal red
+herrings to the real cause — logging out of sway/river/wayfire/niri only `pkill`ed the
+compositor itself, leaving `waybar`, `mako`, `hypridle`, and `nm-applet` running (all
+independent top-level processes, not compositor children). Each crash/relogin cycle on picard
+stacked a fresh set on top of the orphaned ones — found **6 separate `hypridle` processes**
+fighting over the `org.freedesktop.ScreenSaver` D-Bus name, which destabilized the whole
+session and was the actual source of the render delay. Also added logout support for three
+KIROTUX editions not yet wired: labwc, mango, and dwl.
 
 **Technical Details.**
-- `_get_logout()` in `Functions.py` now prefixes the waybar-shipping branches
-  (sway/river/wayfire/niri/labwc/mango) with `pkill waybar;` before the existing
-  `pkill <compositor>` — waybar dies first, then the compositor. `;` (not `&&`) so a
-  non-running waybar's nonzero exit doesn't block the compositor kill.
-- Added `labwc` and `mango` (both ship waybar per their `kiro-labwc`/`kiro-mango` configs)
-  and `dwl` (ships its own `dwlb` bar, not waybar — no waybar-kill needed) to the
-  desktop-detection table.
+- `_get_logout()` in `Functions.py`: the waybar-shipping branches (sway/river/wayfire/labwc/
+  mango) now `pkill waybar; pkill mako; pkill hypridle; pkill nm-applet;` before the existing
+  `pkill <compositor>` — all four companion daemons die first, then the compositor. `;` (not
+  `&&`) so a non-running daemon's nonzero exit doesn't block the rest of the chain.
+- Added `labwc` and `mango` (both ship the same waybar+mako+hypridle+nm-applet stack per their
+  `kiro-labwc`/`kiro-mango` autostart scripts) and `dwl` (ships its own `dwlb` bar — no
+  waybar-kill needed) to the desktop-detection table.
+- Fixed niri's entry: it doesn't run waybar/mako/hypridle at all — it runs `noctalia-shell`
+  (Quickshell, `qs -c noctalia-shell`) per `kiro-niri/etc/skel/.config/niri/cfg/autostart.kdl`.
+  `pkill waybar` there was a silent no-op; now `pkill -f 'qs -c noctalia-shell'`.
+- Verified live on picard: killed the 6 orphaned `hypridle` instances, deployed the fixed
+  `Functions.py`, and confirmed `Super+X` renders immediately afterward.
 
 **Files Modified.**
 - `usr/share/archlinux-logout/Functions.py`
