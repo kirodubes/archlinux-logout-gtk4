@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026.07.01
+
+### Kill waybar before exiting waybar-based Wayland TWMs; add labwc/mango/dwl logout support
+
+**What Changed.** Logging out of sway, river, wayfire, or niri only `pkill`ed the compositor
+itself. waybar runs as an independent top-level process (not a compositor child), so it could
+be left orphaned across TWM switches when testing multiple Wayland editions back-to-back on
+the same box (picard). Also added logout support for three KIROTUX editions not yet wired:
+labwc, mango, and dwl.
+
+**Technical Details.**
+- `_get_logout()` in `Functions.py` now prefixes the waybar-shipping branches
+  (sway/river/wayfire/niri/labwc/mango) with `pkill waybar;` before the existing
+  `pkill <compositor>` — waybar dies first, then the compositor. `;` (not `&&`) so a
+  non-running waybar's nonzero exit doesn't block the compositor kill.
+- Added `labwc` and `mango` (both ship waybar per their `kiro-labwc`/`kiro-mango` configs)
+  and `dwl` (ships its own `dwlb` bar, not waybar — no waybar-kill needed) to the
+  desktop-detection table.
+
+**Files Modified.**
+- `usr/share/archlinux-logout/Functions.py`
+
 ## 2026.06.30
 
 ### Lock screen now works on Plasma (native KScreenLocker, X11 + Wayland)
