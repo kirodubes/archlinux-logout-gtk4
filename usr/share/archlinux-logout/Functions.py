@@ -23,8 +23,9 @@ home = os.path.expanduser("~")
 # X11-only lockers — betterlockscreen wraps i3lock-color, neither runs on Wayland.
 _X11_LOCKERS = ("betterlockscreen", "i3lock")
 # Wayland lockers, in preference order. hyprlock first (Kiro's Hyprland edition);
-# add swaylock/gtklock here to extend coverage to other Wayland compositors.
-_WAYLAND_LOCKERS = ("hyprlock",)
+# gtklock is kiro-ohmyniri's locker (niri is Smithay-based, not wlroots — hyprlock
+# is unverified there). Add swaylock here to extend coverage further.
+_WAYLAND_LOCKERS = ("hyprlock", "gtklock")
 
 
 def resolve_lock_cmd(cmd_lock):
@@ -356,8 +357,19 @@ def _get_logout():
     elif desktop in ("newm", "/usr/share/wayland-sessions/newm"):
         return "pkill newm"
     elif desktop in ("niri", "/usr/share/wayland-sessions/niri"):
-        # niri runs noctalia-shell (qs -c noctalia-shell), not waybar/mako/hypridle.
-        return "pkill -f 'qs -c noctalia-shell'; pkill niri"
+        # Two niri editions share XDG_CURRENT_DESKTOP="niri": kiro-niri runs
+        # noctalia-shell; kiro-ohmyniri runs kiro-hyprland's waybar/mako/swayidle/
+        # variety stack instead. Tell them apart by which shell is actually running.
+        try:
+            noctalia_running = subprocess.run(
+                ["pgrep", "-f", "qs -c noctalia-shell"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            ).returncode == 0
+        except Exception:
+            noctalia_running = False
+        if noctalia_running:
+            return "pkill -f 'qs -c noctalia-shell'; pkill niri"
+        return _waybar_stack + "pkill swayidle; pkill variety; pkill niri"
     elif desktop in ("labwc", "/usr/share/wayland-sessions/labwc"):
         return _waybar_stack + "pkill labwc"
     elif desktop in ("mango", "/usr/share/wayland-sessions/mango"):

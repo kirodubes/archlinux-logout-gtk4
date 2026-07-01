@@ -2,6 +2,28 @@
 
 ## 2026.07.01
 
+### Distinguish kiro-ohmyniri from kiro-niri for logout/lock (both share XDG_CURRENT_DESKTOP="niri")
+
+**What Changed.** `kiro-ohmyniri` (new niri edition with kiro-hyprland's waybar/mako/swayidle/
+variety shell) shipped with the exact same `XDG_CURRENT_DESKTOP="niri"` as `kiro-niri`
+(noctalia-shell) — found live on picard when its logout button ran kiro-niri's noctalia-kill
+command instead, leaving ohmyniri's actual companion daemons (waybar/mako/swayidle/variety)
+orphaned. An `XDG_CURRENT_DESKTOP="niri:ohmyniri"` fix was tried first but doesn't work:
+`_detect_desktop()` truncates at the first colon (`desktop.split(":")[0]`), so it collapses
+straight back to `"niri"` before ever reaching the dispatch table.
+
+**Technical Details.**
+- `_get_logout()`'s niri branch now probes at runtime (`pgrep -f 'qs -c noctalia-shell'`) to
+  tell the two editions apart instead of trusting the desktop string alone. noctalia running →
+  kiro-niri's existing command; otherwise → `_waybar_stack + "pkill swayidle; pkill variety;
+  pkill niri"` for kiro-ohmyniri.
+- Added `gtklock` to `_WAYLAND_LOCKERS` (kiro-ohmyniri's locker — niri is Smithay-based, not
+  wlroots, so hyprlock is unverified there). `resolve_lock_cmd`'s `shutil.which` preference-order
+  scan already handles picking the right one per-machine; no per-edition branching needed.
+
+**Files Modified.**
+- `usr/share/archlinux-logout/Functions.py`
+
 ### Kill the full companion-daemon stack before exiting waybar-based Wayland TWMs; add labwc/mango/dwl logout support; fix niri's bar name
 
 **What Changed.** Root-caused on picard (real-metal labwc test box): `archlinux-logout` was
