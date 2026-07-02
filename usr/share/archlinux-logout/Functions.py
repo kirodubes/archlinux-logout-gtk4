@@ -372,7 +372,12 @@ def _get_logout():
         return _waybar_stack + "pkill swayidle; pkill variety; pkill niri"
     elif desktop in ("labwc", "/usr/share/wayland-sessions/labwc"):
         return _waybar_stack + "pkill labwc"
-    elif desktop in ("mango", "/usr/share/wayland-sessions/mango"):
+    elif desktop in ("mango", "kiro-mango", "/usr/share/wayland-sessions/mango"):
+        # kiro-mango.desktop's file id is "kiro-mango" (its own DesktopNames=mango;wlroots
+        # sits alongside upstream mangowm's mango.desktop, so it can't reuse that filename),
+        # but DESKTOP_SESSION is derived from the filename and is checked before
+        # XDG_CURRENT_DESKTOP in _detect_desktop() -> without this alias it falls through
+        # to "pkill kiro-mango", which matches nothing since the process is just "mango".
         return _waybar_stack + "pkill mango"
     elif desktop in ("dwl", "/usr/share/wayland-sessions/dwl"):
         # dwl ships its own suckless-style bar (dwlb), not waybar.
