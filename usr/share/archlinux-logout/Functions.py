@@ -357,9 +357,15 @@ def _get_logout():
     elif desktop in ("newm", "/usr/share/wayland-sessions/newm"):
         return "pkill newm"
     elif desktop in ("niri", "/usr/share/wayland-sessions/niri"):
-        # Two niri editions share XDG_CURRENT_DESKTOP="niri": kiro-niri runs
-        # noctalia-shell; kiro-ohmyniri runs kiro-hyprland's waybar/mako/swayidle/
-        # variety stack instead. Tell them apart by which shell is actually running.
+        # niri runs as a systemd user service (niri.service, Type=notify): its own
+        # `niri msg action quit -s` cleanly stops graphical-session.target and takes
+        # the shell it spawned down with it. `pkill niri` hard-kills the compositor
+        # out from under systemd, leaving a half-dead session (shell killed, niri
+        # lingering) that looked like logout "needs two presses". Both niri editions
+        # share XDG_CURRENT_DESKTOP="niri": kiro-niri runs noctalia-shell (a child of
+        # niri, so the clean quit takes it down); kiro-ohmyniri runs kiro-hyprland's
+        # waybar/mako/swayidle/variety stack, killed first here as a guard. Tell them
+        # apart by which shell is actually running.
         try:
             noctalia_running = subprocess.run(
                 ["pgrep", "-f", "qs -c noctalia-shell"],
@@ -368,8 +374,8 @@ def _get_logout():
         except Exception:
             noctalia_running = False
         if noctalia_running:
-            return "pkill -f 'qs -c noctalia-shell'; pkill niri"
-        return _waybar_stack + "pkill swayidle; pkill variety; pkill niri"
+            return "niri msg action quit -s"
+        return _waybar_stack + "pkill swayidle; pkill variety; niri msg action quit -s"
     elif desktop in ("labwc", "/usr/share/wayland-sessions/labwc"):
         return _waybar_stack + "pkill labwc"
     elif desktop in ("mango", "kiro-mango", "/usr/share/wayland-sessions/mango"):
