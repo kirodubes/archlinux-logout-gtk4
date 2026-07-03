@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026.07.03
+
+### niri logout: quit the compositor cleanly instead of `pkill niri`
+
+**What Changed.** Logging out of a niri session (both editions) needed the logout fired **twice**.
+Found live on picard: niri runs as a **systemd user service** (`niri.service`, Type=notify), and
+`niri-session` ends a session by force-stopping `graphical-session.target`. `_get_logout()`'s niri
+branch used `pkill niri`, which hard-kills the compositor process out from under systemd — the shell
+it had already killed (noctalia / the waybar stack) stayed dead while `niri --session` lingered,
+leaving a bar-less half-session that only cleared on a second logout. Now both branches end the
+session with niri's own `niri msg action quit -s` (`-s` skips the confirmation prompt), which stops
+`graphical-session.target` and takes the spawned shell down with it — one press.
+
+**Technical Details.**
+- `_get_logout()` niri branch: `pkill niri` → `niri msg action quit -s` in both the noctalia
+  (kiro-niri) and waybar-stack (kiro-ohmyniri) paths. The noctalia path no longer pkills the shell
+  first (it's a child of niri and dies with the clean quit); the ohmyniri path still pre-kills its
+  loose `waybar/mako/hypridle/nm-applet/swayidle/variety` daemons as a guard, then clean-quits niri.
+- The runtime edition probe (`pgrep -f 'qs -c noctalia-shell'`) is unchanged.
+- Verified `niri msg action quit -s` exists on niri 26.04.
+
+**Files Modified.**
+- `usr/share/archlinux-logout/Functions.py`
+- `../KIRO-PKG-BUILD-APPS/archlinux-logout-gtk4/PKGBUILD` (pkgrel 06 → 07)
+
 ## 2026.07.01
 
 ### Distinguish kiro-ohmyniri from kiro-niri for logout/lock (both share XDG_CURRENT_DESKTOP="niri")
