@@ -356,16 +356,22 @@ def _get_logout():
         return _waybar_stack + "pkill wayfire"
     elif desktop in ("newm", "/usr/share/wayland-sessions/newm"):
         return "pkill newm"
+    # niri runs as a systemd user service (niri.service, Type=notify): its own
+    # `niri msg action quit -s` cleanly stops graphical-session.target and takes the
+    # shell it spawned down with it. `pkill niri` hard-kills the compositor out from
+    # under systemd, leaving a half-dead session (shell killed, niri lingering) that
+    # looked like logout "needs two presses". The two Kiro niri editions now ship
+    # their own session entries (kiro-niri.desktop / kiro-ohmyniri.desktop), so
+    # DESKTOP_SESSION distinguishes them directly — no runtime probe needed.
+    elif desktop in ("kiro-niri", "/usr/share/wayland-sessions/kiro-niri"):
+        # noctalia-shell is a child of niri, so the clean quit takes it down.
+        return "niri msg action quit -s"
+    elif desktop in ("kiro-ohmyniri", "/usr/share/wayland-sessions/kiro-ohmyniri"):
+        # Kill the loose waybar/mako/swayidle/variety daemons first, then clean-quit.
+        return _waybar_stack + "pkill swayidle; pkill variety; niri msg action quit -s"
     elif desktop in ("niri", "/usr/share/wayland-sessions/niri"):
-        # niri runs as a systemd user service (niri.service, Type=notify): its own
-        # `niri msg action quit -s` cleanly stops graphical-session.target and takes
-        # the shell it spawned down with it. `pkill niri` hard-kills the compositor
-        # out from under systemd, leaving a half-dead session (shell killed, niri
-        # lingering) that looked like logout "needs two presses". Both niri editions
-        # share XDG_CURRENT_DESKTOP="niri": kiro-niri runs noctalia-shell (a child of
-        # niri, so the clean quit takes it down); kiro-ohmyniri runs kiro-hyprland's
-        # waybar/mako/swayidle/variety stack, killed first here as a guard. Tell them
-        # apart by which shell is actually running.
+        # Plain upstream niri session (no Kiro session entry): fall back to the
+        # runtime shell probe to tell the editions apart.
         try:
             noctalia_running = subprocess.run(
                 ["pgrep", "-f", "qs -c noctalia-shell"],

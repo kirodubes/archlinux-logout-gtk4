@@ -14,11 +14,15 @@ session with niri's own `niri msg action quit -s` (`-s` skips the confirmation p
 `graphical-session.target` and takes the spawned shell down with it — one press.
 
 **Technical Details.**
-- `_get_logout()` niri branch: `pkill niri` → `niri msg action quit -s` in both the noctalia
-  (kiro-niri) and waybar-stack (kiro-ohmyniri) paths. The noctalia path no longer pkills the shell
-  first (it's a child of niri and dies with the clean quit); the ohmyniri path still pre-kills its
-  loose `waybar/mako/hypridle/nm-applet/swayidle/variety` daemons as a guard, then clean-quits niri.
-- The runtime edition probe (`pgrep -f 'qs -c noctalia-shell'`) is unchanged.
+- `_get_logout()` niri branch: `pkill niri` → `niri msg action quit -s`. The noctalia path does not
+  pkill the shell first (it's a child of niri and dies with the clean quit); the ohmyniri path still
+  pre-kills its loose `waybar/mako/hypridle/nm-applet/swayidle/variety` daemons as a guard, then
+  clean-quits niri.
+- **Distinguish the two niri editions by session name, not a runtime probe.** kiro-niri /
+  kiro-ohmyniri now ship their own session entries (`kiro-niri.desktop` / `kiro-ohmyniri.desktop`), so
+  `DESKTOP_SESSION` is `kiro-niri` / `kiro-ohmyniri` — added explicit dispatch branches for each. The
+  old `pgrep -f 'qs -c noctalia-shell'` probe is kept only as the fallback for the plain upstream
+  `niri` session (no Kiro session entry).
 - Verified `niri msg action quit -s` exists on niri 26.04.
 
 **Files Modified.**
