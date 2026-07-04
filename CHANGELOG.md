@@ -2,7 +2,7 @@
 
 ## 2026.07.04
 
-### niri-dms logout: add the DankMaterialShell edition + fix the renamed noctalia session
+### niri-dms + hyprland-noctalia logout: add new editions + fix the renamed noctalia session
 
 **What Changed.** The new `kiro-niri-dms` edition (niri + DankMaterialShell) could not log out at
 all — Super+X did nothing. Found live on picard: the session identity is
@@ -25,6 +25,11 @@ matched, so noctalia logout had regressed into the same no-op.
   with zero leftovers — no `niri`, `dms`, `qs`, `variety`, or `xdg-desktop-portal` processes
   remaining. (`niri msg action quit -s` prints a harmless socket-EOF as niri exits mid-reply; the
   quit succeeds.)
+- New `kiro-hyprland-noctalia` edition (Hyprland + noctalia): `DESKTOP_SESSION=kiro-hyprland-noctalia`
+  didn't match the `hyprland` branch and fell through to the same no-op. Added the session id (+ path
+  form) to the Hyprland branch, so it gets the clean compositor exit (`hyprctl dispatch 'hl.dsp.exit()'`
+  on 0.55+ Lua configs, else `hyprctl dispatch exit`; `uwsm stop` when uwsm-managed). noctalia is a
+  Hyprland child, so the clean exit takes it down — no pre-kill needed.
 
 **Files Modified.**
 - `usr/share/archlinux-logout/Functions.py`

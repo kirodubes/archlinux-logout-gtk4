@@ -308,10 +308,14 @@ def _get_logout():
         return "pkill stumpwm"
     elif desktop in ("leftwm", "/usr/share/xsessions/leftwm"):
         return "pkill leftwm"
-    elif desktop in ("hyprland", "hypr", "hyprland-uwsm",
-                     "/usr/share/wayland-sessions/hyprland", "/usr/share/wayland-sessions/hyprland-uwsm"):
+    elif desktop in ("hyprland", "hypr", "hyprland-uwsm", "kiro-hyprland-noctalia",
+                     "/usr/share/wayland-sessions/hyprland", "/usr/share/wayland-sessions/hyprland-uwsm",
+                     "/usr/share/wayland-sessions/kiro-hyprland-noctalia"):
         # Hyprland (Wayland). Under uwsm use its graceful, ordered shutdown; otherwise the
         # native compositor exit. Never pkill — it's a hard kill and breaks uwsm's shutdown.
+        # kiro-hyprland-noctalia ships its own session (DESKTOP_SESSION=kiro-hyprland-noctalia)
+        # but is plain Hyprland underneath; noctalia-shell is a Hyprland child so the clean
+        # compositor exit takes it down — same handling as any other Hyprland session.
         try:
             uwsm_managed = subprocess.run(
                 ["systemctl", "--user", "is-active", "--quiet", "wayland-wm@Hyprland.service"]
