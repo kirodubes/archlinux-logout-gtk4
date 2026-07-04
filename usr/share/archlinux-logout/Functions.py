@@ -363,12 +363,23 @@ def _get_logout():
     # looked like logout "needs two presses". The two Kiro niri editions now ship
     # their own session entries (kiro-niri.desktop / kiro-ohmyniri.desktop), so
     # DESKTOP_SESSION distinguishes them directly — no runtime probe needed.
-    elif desktop in ("kiro-niri", "/usr/share/wayland-sessions/kiro-niri"):
+    elif desktop in ("kiro-niri-noctalia", "kiro-niri",
+                     "/usr/share/wayland-sessions/kiro-niri-noctalia",
+                     "/usr/share/wayland-sessions/kiro-niri"):
         # noctalia-shell is a child of niri, so the clean quit takes it down.
+        # Session file was renamed kiro-niri.desktop -> kiro-niri-noctalia.desktop;
+        # the old id is kept as an alias so pre-rename installs still match.
         return "niri msg action quit -s"
     elif desktop in ("kiro-ohmyniri", "/usr/share/wayland-sessions/kiro-ohmyniri"):
         # Kill the loose waybar/mako/swayidle/variety daemons first, then clean-quit.
         return _waybar_stack + "pkill swayidle; pkill variety; niri msg action quit -s"
+    elif desktop in ("kiro-niri-dms", "/usr/share/wayland-sessions/kiro-niri-dms"):
+        # DankMaterialShell edition. dms (the shell backend), its qs quickshell child
+        # and variety are spawned as loose siblings under `systemd --user`, NOT as niri
+        # children, so quitting the compositor alone orphans them. `dms kill` is DMS's
+        # own CLI to tear the shell (and its qs) down cleanly; kill variety too, then
+        # clean-quit niri (Type=notify service) so graphical-session.target stops.
+        return "dms kill 2>/dev/null; pkill -x dms; pkill -x variety; niri msg action quit -s"
     elif desktop in ("niri", "/usr/share/wayland-sessions/niri"):
         # Plain upstream niri session (no Kiro session entry): fall back to the
         # runtime shell probe to tell the editions apart.

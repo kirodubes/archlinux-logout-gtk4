@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026.07.04
+
+### niri-dms logout: add the DankMaterialShell edition + fix the renamed noctalia session
+
+**What Changed.** The new `kiro-niri-dms` edition (niri + DankMaterialShell) could not log out at
+all — Super+X did nothing. Found live on picard: the session identity is
+`DESKTOP_SESSION=kiro-niri-dms`, but `_get_logout()` had no branch for it, so it fell through to the
+generic `pkill kiro-niri-dms`, which matches no process (the compositor is `niri`, the shell is
+`dms`/`qs`). Added an explicit branch. Also fixed the noctalia edition, whose session file was
+renamed `kiro-niri.desktop` → `kiro-niri-noctalia.desktop` — its `kiro-niri` branch no longer
+matched, so noctalia logout had regressed into the same no-op.
+
+**Technical Details.**
+- New `kiro-niri-dms` branch: `dms kill 2>/dev/null; pkill -x dms; pkill -x variety; niri msg action quit -s`.
+  On this edition `dms` (the shell backend), its `qs` quickshell child, and `variety` are spawned as
+  loose siblings under `systemd --user` (ppid = the user manager, **not** niri), so quitting the
+  compositor alone would orphan them. `dms kill` is DankMaterialShell's own CLI to tear the shell
+  (and its `qs`) down cleanly; `variety` is killed explicitly; then niri clean-quits.
+- noctalia branch now matches `kiro-niri-noctalia` (new session id) with `kiro-niri` kept as an
+  alias for pre-rename installs. Kill strategy unchanged (noctalia is a niri child, dies with the
+  clean quit).
+- **Verified live on picard.** After running the command the session tore down to the SDDM greeter
+  with zero leftovers — no `niri`, `dms`, `qs`, `variety`, or `xdg-desktop-portal` processes
+  remaining. (`niri msg action quit -s` prints a harmless socket-EOF as niri exits mid-reply; the
+  quit succeeds.)
+
+**Files Modified.**
+- `usr/share/archlinux-logout/Functions.py`
+
 ## 2026.07.03
 
 ### niri logout: quit the compositor cleanly instead of `pkill niri`
