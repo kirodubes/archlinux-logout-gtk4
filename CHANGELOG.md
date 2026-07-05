@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026.07.05
+
+### scroll + miracle-wm logout entries
+
+**What Changed.** Added two `_get_logout()` branches. **scroll** (the new `kiro-scroll` edition,
+`sway-scroll` package — a fork of sway) was falling through to the generic `pkill scroll`, which
+kills the compositor but leaves the Kiro waybar stack (waybar/mako/hypridle/nm-applet/variety)
+lingering → an unclean logout. Added an explicit branch mirroring `sway`:
+`_waybar_stack + "pkill scroll"`. **miracle-wm** (package `miracle-wm-git`; Erik sometimes calls it
+"magic-wm") got an explicit `pkill miracle-wm` branch — Mir-based, not a Kiro waybar edition, so no
+stack; SIGTERM shuts Mir down cleanly.
+
+**Verified** live on the riker test box (`DESKTOP_SESSION=scroll`): the installed copy was patched
+and `_get_logout()` dry-called → `scroll` returns the waybar-stack + `pkill scroll` exit, `sway`
+unchanged.
+
+### Files Modified
+- `usr/share/archlinux-logout/Functions.py`
+
 ## 2026.07.04
 
 ### niri-dms + hyprland-noctalia logout: add new editions + fix the renamed noctalia session
