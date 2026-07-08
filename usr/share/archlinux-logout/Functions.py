@@ -308,9 +308,9 @@ def _get_logout():
         return "pkill stumpwm"
     elif desktop in ("leftwm", "/usr/share/xsessions/leftwm"):
         return "pkill leftwm"
-    elif desktop in ("hyprland", "hypr", "hyprland-uwsm", "kiro-hyprland-noctalia",
+    elif desktop in ("hyprland", "hypr", "hyprland-uwsm", "kiro-hyprland-noctalia","kiro-hyprland-noctura",
                      "/usr/share/wayland-sessions/hyprland", "/usr/share/wayland-sessions/hyprland-uwsm",
-                     "/usr/share/wayland-sessions/kiro-hyprland-noctalia"):
+                     "/usr/share/wayland-sessions/kiro-hyprland-noctalia","/usr/share/wayland-sessions/kiro-hyprland-noctura"):
         # Hyprland (Wayland). Under uwsm use its graceful, ordered shutdown; otherwise the
         # native compositor exit. Never pkill — it's a hard kill and breaks uwsm's shutdown.
         # kiro-hyprland-noctalia ships its own session (DESKTOP_SESSION=kiro-hyprland-noctalia)
