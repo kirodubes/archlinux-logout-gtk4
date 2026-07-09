@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026.07.09
+
+### kiro-hyprland-dms logout entry
+
+**What Changed.** Added a `_get_logout()` branch for the new **`kiro-hyprland-dms`** edition
+(Hyprland + DankMaterialShell). Its session sets `DESKTOP_SESSION=kiro-hyprland-dms`, which had no
+branch, so logout fell through to the generic `pkill kiro-hyprland-dms` fallback — no such process,
+so logout silently did nothing (same gap `kiro-niri-dms` and `kiro-hyprland-noctalia` hit). The new
+branch runs `dms kill 2>/dev/null; pkill -x dms` first (DMS's own teardown, in case it re-parents to
+`systemd --user` as it does on niri rather than dying as a Hyprland child), then the same
+uwsm-aware / Lua-aware Hyprland exit as the primary branch (`uwsm stop` when uwsm-managed, else
+`hyprctl dispatch 'hl.dsp.exit()'` on 0.55+ Lua configs). Never `pkill` the compositor — it breaks
+uwsm's ordered shutdown.
+
+**Not yet boot-verified** (Wayland-GPU editions black-screen in VirtualBox) — confirm the DMS
+teardown on a QEMU virtio-gpu / metal boot at ISO time; the `dms kill` is a harmless no-op if DMS
+already dies with Hyprland.
+
+### Files Modified
+- `usr/share/archlinux-logout/Functions.py`
+
 ## 2026.07.05
 
 ### scroll + miracle-wm logout entries

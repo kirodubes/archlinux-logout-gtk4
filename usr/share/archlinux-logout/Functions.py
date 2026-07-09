@@ -330,6 +330,26 @@ def _get_logout():
         if _hyprland_lua_config():
             return "hyprctl dispatch 'hl.dsp.exit()'"
         return "hyprctl dispatch exit"
+    elif desktop in ("kiro-hyprland-dms", "/usr/share/wayland-sessions/kiro-hyprland-dms"):
+        # Hyprland + DankMaterialShell edition. dms (the shell backend) + its qs
+        # quickshell child are started by `dms run` from hyprland.lua. `dms kill` is
+        # DMS's own CLI to tear the shell (and qs) down cleanly — run it first in case
+        # DMS re-parents to `systemd --user` (as it does on niri) rather than staying a
+        # Hyprland child, then do the same uwsm-aware / Lua-aware Hyprland exit as the
+        # primary branch (uwsm stop when uwsm-managed; never pkill — it breaks uwsm's
+        # ordered shutdown).
+        try:
+            uwsm_managed = subprocess.run(
+                ["systemctl", "--user", "is-active", "--quiet", "wayland-wm@Hyprland.service"]
+            ).returncode == 0
+        except Exception:
+            uwsm_managed = False
+        _dms = "dms kill 2>/dev/null; pkill -x dms; "
+        if uwsm_managed:
+            return _dms + "uwsm stop"
+        if _hyprland_lua_config():
+            return _dms + "hyprctl dispatch 'hl.dsp.exit()'"
+        return _dms + "hyprctl dispatch exit"
     elif desktop in ("dk", "/usr/share/xsessions/dk"):
         return "dkcmd exit"
     elif desktop in ("dusk", "/usr/share/xsessions/dusk"):
