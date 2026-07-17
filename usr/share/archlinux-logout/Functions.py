@@ -232,6 +232,12 @@ def _detect_desktop():
                 stderr=subprocess.DEVNULL,
             ).returncode == 0:
                 desktop = "chadwm"
+            elif subprocess.run(
+                ["pgrep", "-x", "dusk"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).returncode == 0:
+                desktop = "dusk"
         except Exception:
             pass
 
@@ -353,7 +359,10 @@ def _get_logout():
     elif desktop in ("dk", "/usr/share/xsessions/dk"):
         return "dkcmd exit"
     elif desktop in ("dusk", "/usr/share/xsessions/dusk"):
-        return "pkill dusk"
+        # Exact-match kill so it doesn't also catch duskc (dusk's D-Bus control
+        # client) or the dusk-status.sh bar feeder. dusk dying ends the session;
+        # run.sh's loop breaks on the resulting non-zero exit.
+        return "pkill -x dusk"
     elif desktop in ("wmderland", "/usr/share/xsessions/wmderland"):
         return "pkill wmderland"
     elif desktop in ("gnome", "/usr/share/xsessions/gnome"):
