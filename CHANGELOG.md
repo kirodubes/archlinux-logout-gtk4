@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026.07.18
+
+### herbstluftwm (kiro-hlwm) logout detection
+
+**What Changed.** Added a `herbstluftwm` pgrep fallback to `_detect_desktop()` so the
+new **kiro-hlwm** edition is detected even when `DESKTOP_SESSION` is empty (parity with
+the existing `ohmychadwm`/`chadwm`/`dusk` fallbacks). The `_get_logout()` branch for
+`herbstluftwm` already existed, returning **`herbstclient quit`** — herbstluftwm's own
+clean session exit (no `pkill` needed). Part of standing up kiro-hlwm via
+`/kiro-create-x11-twm`.
+
+**Technical Details.** `Functions.py::_detect_desktop()` — new `elif pgrep -x
+herbstluftwm` sets `desktop = "herbstluftwm"` in the `desktop == "unknown"` block.
+py_compile + ruff clean.
+
 ## 2026.07.09
 
 ### kiro-hyprland-dms logout entry

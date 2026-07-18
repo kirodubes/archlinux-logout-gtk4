@@ -238,6 +238,12 @@ def _detect_desktop():
                 stderr=subprocess.DEVNULL,
             ).returncode == 0:
                 desktop = "dusk"
+            elif subprocess.run(
+                ["pgrep", "-x", "herbstluftwm"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).returncode == 0:
+                desktop = "herbstluftwm"
         except Exception:
             pass
 
